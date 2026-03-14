@@ -1,0 +1,28 @@
+/**
+ * Reusable @custom-media breakpoints. Use in any CSS/Module CSS:
+ *   @media (--bp-max-xs) { ... }
+ *   @media (--bp-min-md) { ... }
+ * Values must match postcss.config.js breakpointVars (can't use var() in @media).
+ */
+
+:root {
+    --mantine-breakpoint-xs: 36em;
+    --mantine-breakpoint-sm: 48em;
+    --mantine-breakpoint-md: 62em;
+    --mantine-breakpoint-lg: 75em;
+    --mantine-breakpoint-xl: 88em;
+}
+
+/* max-width (below this size) */
+@custom-media --bp-max-xs (max-width: var(--mantine-breakpoint-xs));
+@custom-media --bp-max-sm (max-width: var(--mantine-breakpoint-sm));
+@custom-media --bp-max-md (max-width: var(--mantine-breakpoint-md));
+@custom-media --bp-max-lg (max-width: var(--mantine-breakpoint-lg));
+@custom-media --bp-max-xl (max-width: var(--mantine-breakpoint-xl));
+
+/* min-width (this size and up) */
+@custom-media --bp-min-xs (min-width: var(--mantine-breakpoint-xs));
+@custom-media --bp-min-sm (min-width: var(--mantine-breakpoint-sm));
+@custom-media --bp-min-md (min-width: var(--mantine-breakpoint-md));
+@custom-media --bp-min-lg (min-width: var(--mantine-breakpoint-lg));
+@custom-media --bp-min-xl (min-width: var(--mantine-breakpoint-xl));

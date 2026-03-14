@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { Link } from 'react-router-dom'
 import {
   Anchor,
@@ -11,12 +10,12 @@ import {
   Stack,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 import classes from './LoginPage.module.css'
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email'),
+  email: z.email('Invalid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
@@ -26,7 +25,7 @@ export function LoginPage() {
   const form = useForm<LoginFormValues>({
     mode: 'uncontrolled',
     initialValues: { email: '', password: '' },
-    validate: zodResolver(loginSchema),
+    validate: zod4Resolver(loginSchema),
   })
 
   const handleSubmit = (values: LoginFormValues) => {

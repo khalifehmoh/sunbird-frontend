@@ -1,12 +1,12 @@
-import * as React from 'react'
+
 import { Link } from 'react-router-dom'
 import { Center, Box, Paper, Title, Text, TextInput, Button, Stack, Anchor } from '@mantine/core'
 import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 
 const forgotSchema = z.object({
-  email: z.string().email('Invalid email'),
+  email: z.email('Invalid email'),
 })
 
 type ForgotFormValues = z.infer<typeof forgotSchema>
@@ -15,7 +15,7 @@ export function ForgotPasswordPage() {
   const form = useForm<ForgotFormValues>({
     mode: 'uncontrolled',
     initialValues: { email: '' },
-    validate: zodResolver(forgotSchema),
+    validate: zod4Resolver(forgotSchema),
   })
 
   const handleSubmit = (values: ForgotFormValues) => {

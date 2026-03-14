@@ -30,6 +30,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@csstools/postcss-global-data": "^4.0.0",
     "@eslint/js": "^9.39.3",
     "@types/node": "^24.11.0",
     "@types/react": "^19.2.14",
@@ -40,6 +41,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "postcss": "^8.5.8",
+    "postcss-custom-media": "^12.0.1",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "typescript": "~5.9.3",

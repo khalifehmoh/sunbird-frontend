@@ -1,4 +1,4 @@
-import * as React from 'react'
+
 import { Link } from 'react-router-dom'
 import {
   Box,
@@ -12,14 +12,14 @@ import {
   Anchor,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
-import { zodResolver } from 'mantine-form-zod-resolver'
+import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 import classes from './RegisterPage.module.css'
 
 const registerSchema = z
   .object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Invalid email'),
+    email: z.email('Invalid email'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
@@ -39,7 +39,7 @@ export function RegisterPage() {
       password: '',
       confirmPassword: '',
     },
-    validate: zodResolver(registerSchema),
+    validate: zod4Resolver(registerSchema),
   })
 
   const handleSubmit = (values: RegisterFormValues) => {
