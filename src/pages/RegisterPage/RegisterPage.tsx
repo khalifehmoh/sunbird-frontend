@@ -10,18 +10,23 @@ import {
   Button,
   Stack,
   Anchor,
+  Divider,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 import classes from './RegisterPage.module.css'
+import { useRegisterUserMutation } from '../../redux/features/auth/authService'
 
 const registerSchema = z
   .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
+    username: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.email('Invalid email'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
+    fullName: z.string().min(2, 'Full name must be at least 2 characters'),
+    fullNameAr: z.string().min(2, 'Full name in Arabic must be at least 2 characters'),
+    tenantCode: z.string().min(2, 'Tenant code must be at least 2 characters'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -31,19 +36,24 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 export function RegisterPage() {
+  const [registerUser, {isLoading}] = useRegisterUserMutation()
   const form = useForm<RegisterFormValues>({
     mode: 'uncontrolled',
     initialValues: {
-      name: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
+      fullName: '',
+      fullNameAr: '',
+      tenantCode: '',
     },
     validate: zod4Resolver(registerSchema),
   })
 
   const handleSubmit = (values: RegisterFormValues) => {
-    console.log('Register', values)
+    console.log('Register', values);
+    registerUser(values)
     // TODO: call auth API
   }
 
@@ -62,10 +72,10 @@ export function RegisterPage() {
             <form onSubmit={form.onSubmit(handleSubmit)}>
               <Stack gap="md">
                 <TextInput
-                  label="Name"
-                  placeholder="Your name"
-                  key={form.key('name')}
-                  {...form.getInputProps('name')}
+                  label="Username"
+                  placeholder="Your username"
+                  key={form.key('username')}
+                  {...form.getInputProps('username')}
                 />
                 <TextInput
                   label="Email"
@@ -85,6 +95,25 @@ export function RegisterPage() {
                   placeholder="Confirm your password"
                   key={form.key('confirmPassword')}
                   {...form.getInputProps('confirmPassword')}
+                />
+                <Divider mt="xs" />
+                <TextInput
+                  label="Full name"
+                  placeholder="Your full name"
+                  key={form.key('fullName')}
+                  {...form.getInputProps('fullName')}
+                />
+                <TextInput
+                  label="Full name in Arabic"
+                  placeholder="Your full name in Arabic"
+                  key={form.key('fullNameAr')}
+                  {...form.getInputProps('fullNameAr')}
+                />
+                <TextInput
+                  label="Tenant code"
+                  placeholder="Your tenant code"
+                  key={form.key('tenantCode')}
+                  {...form.getInputProps('tenantCode')}
                 />
                 <Button type="submit" fullWidth>
                   Create account

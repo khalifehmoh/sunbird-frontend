@@ -1,0 +1,316 @@
+[
+    {
+      "title": "[Frontend] Page 1 — Login",
+      "milestone": "Sprint 1 — Auth + Core Setup",
+      "labels": [
+        "frontend",
+        "sprint-1",
+        "auth"
+      ],
+      "body": "## Page 1 — Login\n**Route:** `/login`\n**Blueprint ref:** Section 3.1\n\n### Checklist\n- [ ] Centered card layout (no sidebar)\n- [ ] Username/email + password fields\n- [ ] Remember Me checkbox\n- [ ] Toggle password visibility\n- [ ] Login button + Forgot Password link\n- [ ] 5-attempt lockout message with timestamp\n- [ ] Redirect to `/change-password` if `requirePasswordChange=true`\n- [ ] Redirect to `/mfa-verify` if `mfaEnabled=true`\n- [ ] Auto-login on page load if valid cookie (`GET /auth/session`)\n- [ ] `POST /auth/login` wired up\n- [ ] Error: \"Invalid username or password\" (never specify which field)\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 2 — Forgot Password",
+      "milestone": "Sprint 1 — Auth + Core Setup",
+      "labels": [
+        "frontend",
+        "sprint-1",
+        "auth"
+      ],
+      "body": "## Page 2 — Forgot Password\n**Route:** `/forgot-password`\n**Blueprint ref:** Section 3.2\n\n### Checklist\n- [ ] Centered card layout\n- [ ] Email input with RFC 5322 validation\n- [ ] Always show success message regardless of email existence\n- [ ] Back to Login link\n- [ ] `POST /auth/forgot-password` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 3 — Reset Password",
+      "milestone": "Sprint 1 — Auth + Core Setup",
+      "labels": [
+        "frontend",
+        "sprint-1",
+        "auth"
+      ],
+      "body": "## Page 3 — Reset Password\n**Route:** `/reset-password?token={token}`\n**Blueprint ref:** Section 3.3\n\n### Checklist\n- [ ] Token validation on page load (`GET /auth/validate-reset-token`)\n- [ ] Show error if token invalid/expired\n- [ ] New password + Confirm password fields (both with toggle)\n- [ ] Real-time confirm match check\n- [ ] Password complexity: min 8, 1 upper, 1 lower, 1 digit, 1 special\n- [ ] `POST /auth/reset-password` wired up\n- [ ] Redirect to `/login` on success\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 4 — Force Change Password",
+      "milestone": "Sprint 1 — Auth + Core Setup",
+      "labels": [
+        "frontend",
+        "sprint-1",
+        "auth"
+      ],
+      "body": "## Page 4 — Force Change Password\n**Route:** `/change-password`\n**Blueprint ref:** Section 3.4\n\n### Checklist\n- [ ] Route guard: redirect here if valid JWT but `requirePasswordChange=true`\n- [ ] Cannot navigate away (no sidebar, no other links)\n- [ ] Current password + New password + Confirm password\n- [ ] Complexity validation\n- [ ] Logout link as only escape\n- [ ] `PUT /auth/change-password` wired up\n- [ ] Redirect to `/admin` on success\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 5 — MFA Verify",
+      "milestone": "Sprint 1 — Auth + Core Setup",
+      "labels": [
+        "frontend",
+        "sprint-1",
+        "auth"
+      ],
+      "body": "## Page 5 — MFA Verify\n**Route:** `/mfa-verify`\n**Blueprint ref:** Section 3.5\n\n### Checklist\n- [ ] 6-digit OTP input (numeric only)\n- [ ] Auto-submit on 6 digits entered\n- [ ] Back to Login link (clears pre-auth state)\n- [ ] `POST /auth/verify-mfa` wired up\n- [ ] Redirect to `/admin` on full JWT issued\n- [ ] Max 5 wrong attempts lockout handling\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] AdminShell Layout + Shared Components",
+      "milestone": "Sprint 1 — Auth + Core Setup",
+      "labels": [
+        "frontend",
+        "sprint-1"
+      ],
+      "body": "## AdminShell Layout + Component Library\n**Blueprint ref:** Section 1, Sprint 1\n\n### Checklist\n- [ ] Sidebar navigation with all module links\n- [ ] Header (user avatar, tenant name, language toggle EN/AR)\n- [ ] RTL layout switching (LTR ↔ RTL)\n- [ ] Mantine theme: teal/navy color system\n- [ ] `StatusBadge` shared component\n- [ ] `ConfirmModal` shared component\n- [ ] `usePermission()` hook wired to auth store\n- [ ] Route guards (authenticated, requirePasswordChange, MFA)\n- [ ] All 31 routes lazy-loaded\n- [ ] Redux auth store setup"
+    },
+    {
+      "title": "[Frontend] Page 6 — Admin Dashboard",
+      "milestone": "Sprint 2 — Tenant + Branch",
+      "labels": [
+        "frontend",
+        "sprint-2"
+      ],
+      "body": "## Page 6 — Admin Dashboard\n**Route:** `/admin`\n**Blueprint ref:** Section 4\n\n### Checklist\n- [ ] 4 KPI cards: Tenants, Users, Active Sessions, Audit Events (24h)\n- [ ] Activity bar chart (audit_logs grouped by day, last 7 days)\n- [ ] Recent audit events table (last 10, clickable rows)\n- [ ] KPI cards navigate to respective list pages\n- [ ] All data loaded in parallel via React Query\n- [ ] `GET /dashboard/stats` wired up\n- [ ] `GET /audit?limit=10&sort=created_at:desc` wired up\n- [ ] Permission gates: `TENANT:READ`, `USER:READ`, `AUDIT:READ`\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 7 — Tenant List",
+      "milestone": "Sprint 2 — Tenant + Branch",
+      "labels": [
+        "frontend",
+        "sprint-2",
+        "tenants"
+      ],
+      "body": "## Page 7 — Tenant List\n**Route:** `/admin/tenants`\n**Blueprint ref:** Section 5.1\n\n### Checklist\n- [ ] Paginated table with all columns (code, name EN+AR, type, subscription, users/limit, status)\n- [ ] Search (debounced 300ms) by name/code\n- [ ] Filters: Org Type, Status, Subscription dropdowns\n- [ ] Status progress indicator for users/limit\n- [ ] Inline status toggle with ConfirmModal for deactivate\n- [ ] Create / View / Edit / Delete / Export actions\n- [ ] Permission gates per action\n- [ ] `GET /tenants` wired up\n- [ ] `PATCH /tenants/:id/status` wired up\n- [ ] `DELETE /tenants/:id` wired up (soft delete)\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 8 — Tenant Create / Edit",
+      "milestone": "Sprint 2 — Tenant + Branch",
+      "labels": [
+        "frontend",
+        "sprint-2",
+        "tenants"
+      ],
+      "body": "## Page 8 — Tenant Create / Edit\n**Route:** `/admin/tenants/new` | `/:id/edit`\n**Blueprint ref:** Section 5.2\n\n### Checklist\n- [ ] 4-tab form: Basic Info | Contact | Subscription | Settings\n- [ ] All fields per blueprint (EN + AR names, org type, parent tenant, etc.)\n- [ ] Tenant Code disabled in edit mode\n- [ ] Async unique code check (debounced 500ms)\n- [ ] Sub End Date >= Sub Start validation\n- [ ] `POST /tenants` and `PUT /tenants/:id` wired up\n- [ ] `GET /tenants/:id` pre-fill on edit\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 9 — Tenant Detail",
+      "milestone": "Sprint 2 — Tenant + Branch",
+      "labels": [
+        "frontend",
+        "sprint-2",
+        "tenants"
+      ],
+      "body": "## Page 9 — Tenant Detail\n**Route:** `/admin/tenants/:id`\n**Blueprint ref:** Section 5.3\n\n### Checklist\n- [ ] Header card: name, code, status, type, subscription (always visible)\n- [ ] 4 tabs: Overview | Branches | Config | Audit Trail\n- [ ] Branches tab: table + inline Create Branch button\n- [ ] Config tab: key/value table with inline edit\n- [ ] Audit tab: last 50 events\n- [ ] Edit + Change Status with ConfirmModal\n- [ ] All tab API calls wired up\n- [ ] Permission gates per action\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 10 — Tenant Config",
+      "milestone": "Sprint 2 — Tenant + Branch",
+      "labels": [
+        "frontend",
+        "sprint-2",
+        "tenants"
+      ],
+      "body": "## Page 10 — Tenant Config\n**Route:** `/admin/tenants/:id/config`\n**Blueprint ref:** Section 5.4\n\n### Checklist\n- [ ] Table grouped by config key prefix\n- [ ] Encrypted values show `######`\n- [ ] Inline edit (save on blur), JSONB editor\n- [ ] Reveal encrypted (eye icon, 5s then re-mask, logged in audit)\n- [ ] Add Config inline new row\n- [ ] Delete with ConfirmModal\n- [ ] All CRUD endpoints wired up\n- [ ] Permission gates: `CONFIG:READ/UPDATE/CREATE/DELETE`\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 11 — Branch List",
+      "milestone": "Sprint 2 — Tenant + Branch",
+      "labels": [
+        "frontend",
+        "sprint-2",
+        "branches"
+      ],
+      "body": "## Page 11 — Branch List\n**Route:** `/admin/branches`\n**Blueprint ref:** Section 6.1\n\n### Checklist\n- [ ] Table: code, name, tenant, type, HQ (star badge), city, status\n- [ ] HQ branch visually highlighted\n- [ ] Tenant column hidden for tenant-scoped users\n- [ ] Filters: Search, Tenant (super-admin only), Type, Status, HQ toggle\n- [ ] Status toggle with ConfirmModal\n- [ ] Cannot delete HQ if other branches exist (handle backend error)\n- [ ] All API calls wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 12 — Branch Create / Edit",
+      "milestone": "Sprint 2 — Tenant + Branch",
+      "labels": [
+        "frontend",
+        "sprint-2",
+        "branches"
+      ],
+      "body": "## Page 12 — Branch Create / Edit\n**Route:** `/admin/branches/new` | `/:id/edit`\n**Blueprint ref:** Section 6.2\n\n### Checklist\n- [ ] Drawer or inline form layout\n- [ ] All fields per blueprint (EN + AR names, type, HQ toggle, etc.)\n- [ ] Branch Code disabled in edit\n- [ ] Async unique code check within tenant\n- [ ] Is HQ one per tenant validation (handle backend error)\n- [ ] `POST /branches` and `PUT /branches/:id` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 13 — User List",
+      "milestone": "Sprint 3 — User Management",
+      "labels": [
+        "frontend",
+        "sprint-3",
+        "users"
+      ],
+      "body": "## Page 13 — User List\n**Route:** `/admin/users`\n**Blueprint ref:** Section 7.1\n\n### Checklist\n- [ ] Table: avatar (initials), full name, username, email (verified checkmark), employee ID, type, status, MFA shield, last login\n- [ ] Bulk activate/deactivate bar\n- [ ] Filters: Search (debounced), Status, Type, Branch, MFA toggle, Last Login date range\n- [ ] Lock/Unlock, Reset Password with ConfirmModal\n- [ ] Cannot delete own account\n- [ ] All API calls wired up including bulk status\n- [ ] Permission gates per action\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 14 — User Create / Edit",
+      "milestone": "Sprint 3 — User Management",
+      "labels": [
+        "frontend",
+        "sprint-3",
+        "users"
+      ],
+      "body": "## Page 14 — User Create / Edit\n**Route:** `/admin/users/new` | `/:id/edit`\n**Blueprint ref:** Section 7.2\n\n### Checklist\n- [ ] 3-tab form: Identity | Account | Preferences\n- [ ] All fields per blueprint (EN + AR names, username, email, mobile, employee ID, national ID masked)\n- [ ] Username auto-suggestion, disabled in edit\n- [ ] Async unique checks: username + email (debounced 500ms)\n- [ ] National ID: 10 digits, stored encrypted (masked input)\n- [ ] On create: auto-generate temp password, `requirePasswordChange=true`\n- [ ] `POST /users` and `PUT /users/:id` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 15 — User Detail",
+      "milestone": "Sprint 3 — User Management",
+      "labels": [
+        "frontend",
+        "sprint-3",
+        "users"
+      ],
+      "body": "## Page 15 — User Detail\n**Route:** `/admin/users/:id`\n**Blueprint ref:** Section 7.3\n\n### Checklist\n- [ ] Profile header + 5 tabs: Profile | Roles | Groups | Tenant Access | Sessions\n- [ ] Effective Permissions section (merged user_roles + group_roles, flattened)\n- [ ] Assign Role modal → `POST /users/:id/roles/:roleId`\n- [ ] Revoke Role with ConfirmModal\n- [ ] Add to Group modal\n- [ ] Grant Tenant Access modal\n- [ ] Terminate Session / Terminate All Sessions\n- [ ] Lock/Unlock and Reset Password from header\n- [ ] All tab API calls wired up\n- [ ] Permission gates: `ASSIGN_ROLE`, `REVOKE_ROLE`, `USER:UPDATE`\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 16 — User Sessions",
+      "milestone": "Sprint 3 — User Management",
+      "labels": [
+        "frontend",
+        "sprint-3",
+        "users"
+      ],
+      "body": "## Page 16 — User Sessions\n**Route:** `/admin/users/:id/sessions`\n**Blueprint ref:** Section 7.4\n\n### Checklist\n- [ ] Table: login time, last activity (relative), IP, browser+OS (parsed), expires, status badge\n- [ ] Active sessions visually highlighted\n- [ ] Terminate Session per row (active only) with ConfirmModal\n- [ ] Terminate All Sessions button\n- [ ] All API calls wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 17 — User Tenant Access",
+      "milestone": "Sprint 3 — User Management",
+      "labels": [
+        "frontend",
+        "sprint-3",
+        "users"
+      ],
+      "body": "## Page 17 — User Tenant Access\n**Route:** `/admin/users/:id/access`\n**Blueprint ref:** Section 7.5\n\n### Checklist\n- [ ] Table: tenant name (link), code, status, granted by, granted date\n- [ ] Grant Access: tenant selector modal → `POST /users/:id/tenant-access/:tenantId`\n- [ ] Revoke Access with ConfirmModal\n- [ ] All API calls wired up\n- [ ] Permission gates: `USER:READ`, `USER:UPDATE`\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 18 — Group List",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4",
+        "groups"
+      ],
+      "body": "## Page 18 — Group List\n**Route:** `/admin/groups`\n**Blueprint ref:** Section 8.1\n\n### Checklist\n- [ ] Table: code (badge), name EN+AR, members count (clickable), roles count, status\n- [ ] Filters: Search, Status\n- [ ] Delete warns about affected member count (cascade soft delete)\n- [ ] `GET /groups` wired up\n- [ ] `DELETE /groups/:id` wired up\n- [ ] Permission gates per action\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 19 — Group Create / Edit",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4",
+        "groups"
+      ],
+      "body": "## Page 19 — Group Create / Edit\n**Route:** `/admin/groups/new` | `/:id/edit`\n**Blueprint ref:** Section 8.2\n\n### Checklist\n- [ ] Inline form: code, name EN+AR, description, status\n- [ ] Group Code disabled in edit\n- [ ] Async unique code check within tenant\n- [ ] `POST /groups` and `PUT /groups/:id` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 20 — Group Detail",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4",
+        "groups"
+      ],
+      "body": "## Page 20 — Group Detail\n**Route:** `/admin/groups/:id`\n**Blueprint ref:** Section 8.3\n\n### Checklist\n- [ ] Header card + 2 tabs: Members | Roles\n- [ ] Members tab: user search modal → Add, Remove with ConfirmModal\n- [ ] Roles tab: role selector → Assign, Revoke with ConfirmModal\n- [ ] Tooltip on roles: \"X users inherit this role through this group\"\n- [ ] All API calls wired up\n- [ ] Permission gates: `GROUP:UPDATE`, `ASSIGN_ROLE`, `REVOKE_ROLE`\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 21 — Role List",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4",
+        "roles"
+      ],
+      "body": "## Page 21 — Role List\n**Route:** `/admin/roles`\n**Blueprint ref:** Section 9.1\n\n### Checklist\n- [ ] Table: code (lock icon if system), name, type (SYSTEM blue/CUSTOM gray), scope, permissions count, users count, status\n- [ ] System roles: Edit + Delete disabled, tooltip shown\n- [ ] Filters: Search, Type toggle (System/Custom/All), Status\n- [ ] View Permissions (key icon) → `/roles/:id/permissions`\n- [ ] Delete warns about affected users+groups\n- [ ] `GET /roles` wired up\n- [ ] Permission gates per action\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 22 — Role Create / Edit",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4",
+        "roles"
+      ],
+      "body": "## Page 22 — Role Create / Edit\n**Route:** `/admin/roles/new` | `/:id/edit`\n**Blueprint ref:** Section 9.2\n\n### Checklist\n- [ ] Single form: code, name EN+AR, description, scope, status\n- [ ] Role Code disabled in edit\n- [ ] Scope: GLOBAL | TENANT-SPECIFIC\n- [ ] `POST /roles` and `PUT /roles/:id` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 23 — Role Permissions Matrix",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4",
+        "roles"
+      ],
+      "body": "## Page 23 — Role Permissions Matrix\n**Route:** `/admin/roles/:id/permissions`\n**Blueprint ref:** Section 9.3\n\n### Checklist\n- [ ] Matrix: rows = modules, columns = 7 operations (CREATE/READ/UPDATE/DELETE/EXPORT/PRINT/APPROVE)\n- [ ] Sticky first column (module names) + sticky header row (operations)\n- [ ] Checkbox: checked = teal fill, unchecked = white, saving = gray spinner per cell\n- [ ] Single toggle: immediate POST or DELETE\n- [ ] On error: revert checkbox + error toast\n- [ ] Row master checkbox: batch grant/revoke all ops for a module\n- [ ] Copy From Role: dropdown + ConfirmModal\n- [ ] System roles: all checkboxes read-only\n- [ ] Warn if revoking READ while CREATE/UPDATE/DELETE still granted\n- [ ] All API calls wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 24 — Module List",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4"
+      ],
+      "body": "## Page 24 — Module List\n**Route:** `/admin/modules`\n**Blueprint ref:** Section 10.1\n\n### Checklist\n- [ ] Drag-to-reorder list (drag handle icon)\n- [ ] Table: drag handle, code, name, type (SYSTEM/CUSTOM), permissions count, status\n- [ ] System modules: Delete disabled\n- [ ] Optimistic update on drag reorder\n- [ ] `PATCH /modules/reorder` wired up (body: `{orderedIds:[]}`)\n- [ ] `DELETE /modules/:id` cascades to permissions\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 25 — Module Create / Edit",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4"
+      ],
+      "body": "## Page 25 — Module Create / Edit\n**Route:** `/admin/modules/new` | `/:id/edit`\n**Blueprint ref:** Section 10.2\n\n### Checklist\n- [ ] Simple form: code (uppercase, unique), name EN+AR, description, Is System (read-only in edit), status\n- [ ] Module Code disabled in edit\n- [ ] Is System Module cannot change after creation\n- [ ] `POST /modules` and `PUT /modules/:id` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 26 — Permission List",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4"
+      ],
+      "body": "## Page 26 — Permission List\n**Route:** `/admin/permissions`\n**Blueprint ref:** Section 10.3\n\n### Checklist\n- [ ] Table grouped by module: code, module, operation (color-coded badge), name EN\n- [ ] Filters: Search, Module dropdown, Operation multi-select (7 ops)\n- [ ] Delete warns about roles using this permission\n- [ ] `GET /permissions?moduleId=&operation=` wired up\n- [ ] Permission gates per action\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 27 — Permission Create / Edit",
+      "milestone": "Sprint 4 — Groups + RBAC",
+      "labels": [
+        "frontend",
+        "sprint-4"
+      ],
+      "body": "## Page 27 — Permission Create / Edit\n**Route:** `/admin/permissions/new` | `/:id/edit`\n**Blueprint ref:** Section 10.4\n\n### Checklist\n- [ ] Simple form: module (dropdown), operation (dropdown), code (auto-suggested, disabled in edit), name EN+AR, description\n- [ ] Permission Code auto-suggested from module+operation\n- [ ] `POST /permissions` and `PUT /permissions/:id` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 28 — Audit Log",
+      "milestone": "Sprint 5 — Audit + Security + Dashboard Polish",
+      "labels": [
+        "frontend",
+        "sprint-5",
+        "audit"
+      ],
+      "body": "## Page 28 — Audit Log\n**Route:** `/admin/audit`\n**Blueprint ref:** Section 11.1\n\n### Checklist\n- [ ] Full-width filterable table with date range (required, default last 7 days)\n- [ ] Columns: timestamp (DESC default), user (link), tenant, action (color-coded), entity type, entity name, IP, result (tick/cross)\n- [ ] Expandable rows: JSON diff panel (old=red, new=green) using `react-diff-viewer`\n- [ ] Filters: Date range, User autocomplete, Tenant, Action type (multi-select), Entity type (multi-select), Result radio, IP\n- [ ] Tenant column hidden for tenant-scoped users\n- [ ] Export CSV + Export PDF (compliance report with filter header)\n- [ ] `GET /audit` with all filter params wired up\n- [ ] Role access restrictions (super-admin sees all, tenant admin sees own)\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 29 — Audit Event Detail",
+      "milestone": "Sprint 5 — Audit + Security + Dashboard Polish",
+      "labels": [
+        "frontend",
+        "sprint-5",
+        "audit"
+      ],
+      "body": "## Page 29 — Audit Event Detail\n**Route:** `/admin/audit/:id`\n**Blueprint ref:** Section 11.2\n\n### Checklist\n- [ ] Detail card: event ID, timestamp, user (link), action (color badge), entity type/name, IP, user agent (parsed), session ID (link), result + error\n- [ ] Side-by-side JSON diff viewer: old_value (red panel) vs new_value (green panel)\n- [ ] Back to Audit Log button (preserves filters)\n- [ ] View User link → `/admin/users/:id`\n- [ ] `GET /audit/:id` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 30 — Active Sessions Monitor",
+      "milestone": "Sprint 5 — Audit + Security + Dashboard Polish",
+      "labels": [
+        "frontend",
+        "sprint-5",
+        "security"
+      ],
+      "body": "## Page 30 — Active Sessions Monitor\n**Route:** `/admin/sessions`\n**Blueprint ref:** Section 11.3\n\n### Checklist\n- [ ] Live active session count badge\n- [ ] Auto-refreshing table (30s via React Query `refetchInterval`)\n- [ ] Columns: user (link), tenant, login time, last activity (relative, red if >25min), expires (countdown), IP, browser+OS, duration\n- [ ] Sessions near timeout (>25 min inactive) highlighted orange\n- [ ] Terminate Session per row + Terminate All for a user\n- [ ] Auto Refresh toggle (default ON) + Refresh Now button\n- [ ] Tenant column hidden for tenant-scoped users\n- [ ] `GET /sessions/active` wired up\n- [ ] RTL/AR support"
+    },
+    {
+      "title": "[Frontend] Page 31 — Failed Login Report",
+      "milestone": "Sprint 5 — Audit + Security + Dashboard Polish",
+      "labels": [
+        "frontend",
+        "sprint-5",
+        "security"
+      ],
+      "body": "## Page 31 — Failed Login Report\n**Route:** `/admin/security/failed-logins`\n**Blueprint ref:** Section 11.4\n\n### Checklist\n- [ ] Stats cards: Total Failed (24h), Unique IPs, Locked Accounts\n- [ ] Table: timestamp, username tried, user (link if found), IP (red if >5 attempts), attempts count, account locked (lock icon + timestamp), error\n- [ ] IPs with >5 attempts highlighted red\n- [ ] Filters: Date range (required, default last 24h), Username, IP, Locked Only toggle\n- [ ] Unlock Account inline (PATCH status=ACTIVE, resets failed_login_attempts)\n- [ ] Export CSV\n- [ ] `GET /audit?actionType=FAILED_LOGIN` wired up\n- [ ] `GET /security/failed-login-summary` for stats\n- [ ] RTL/AR support"
+    }
+  ]

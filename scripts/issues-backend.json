@@ -1,0 +1,232 @@
+[
+  {
+    "title": "[DB] V001 — Core Schema Baseline Migration",
+    "milestone": "Sprint 1 — Auth + Core Setup",
+    "labels": [
+      "db",
+      "sprint-1"
+    ],
+    "body": "**Planned assignee:** Alaa Himour\n\n## DB Migration: V001__create_core_schema.sql\n**File:** `sunbird.core.db/migrations/core/V001__create_core_schema.sql`\n**Blueprint ref:** Build Guide §3.2\n\n### Checklist\n- [ ] Create `core` schema\n- [ ] Enable extensions: `uuid-ossp`, `pgcrypto` (both scoped to core schema)\n- [ ] Create ENUMs: `tenant_status`, `user_status`, `user_type`, `branch_type`, `subscription_type`, `org_type`, `operation_type`\n- [ ] Table: `core.tenants` — tenant_id (UUID PK), parent_tenant_id, tenant_code (unique), tenant_name, tenant_name_ar, organization_type, license_number, tax_number, contact_email, contact_phone, country, status, subscription_type, subscription_start_date, subscription_end_date, max_users, max_branches + audit cols\n- [ ] Table: `core.branches` — branch_id, tenant_id (FK), branch_code, branch_name, branch_name_ar, branch_type, is_headquarters, license_number, contact_email, contact_phone, address, city, region, status + audit cols\n- [ ] Table: `core.users` — user_id, tenant_id (FK), branch_id (FK), username (unique), email (unique), password_hash, first_name, last_name, first_name_ar, last_name_ar, employee_id, national_id_encrypted, mobile, user_type, status, mfa_enabled, mfa_secret_encrypted, require_password_change, failed_login_attempts, account_locked_until, last_login_at, language, timezone + audit cols\n- [ ] Table: `core.user_sessions` — session_id, user_id (FK), tenant_id, login_at, last_activity_at, expires_at, ip_address, user_agent, is_active + audit cols\n- [ ] Table: `core.password_reset_tokens` — token_id, user_id (FK), token_hash (SHA-256), expires_at, used_at, created_at\n- [ ] Table: `core.user_tenant_access` — access_id, user_id (FK), tenant_id (FK), status, access_granted_by, access_granted_at + audit cols\n- [ ] Table: `core.groups` — group_id, tenant_id (FK), group_code (unique within tenant), group_name, group_name_ar, description, status + audit cols\n- [ ] Table: `core.group_members` — id, group_id (FK), user_id (FK), joined_at, joined_by + audit cols\n- [ ] Table: `core.roles` — role_id, tenant_id (nullable for global), role_code (unique), role_name, role_name_ar, description, is_system_role, scope (GLOBAL/TENANT), status + audit cols\n- [ ] Table: `core.user_roles` — id, user_id (FK), role_id (FK), assigned_at, assigned_by + audit cols\n- [ ] Table: `core.group_roles` — id, group_id (FK), role_id (FK), assigned_at, assigned_by + audit cols\n- [ ] Table: `core.modules` — module_id, module_code (unique), module_name, module_name_ar, description, display_order, is_system_module, status + audit cols\n- [ ] Table: `core.permissions` — permission_id, module_id (FK), operation (ENUM), permission_code (unique), permission_name, permission_name_ar, description + audit cols\n- [ ] Table: `core.role_permissions` — id, role_id (FK), permission_id (FK), granted_at, granted_by\n- [ ] Table: `core.tenant_config` — config_id, tenant_id (FK), config_key, config_value (JSONB), is_encrypted, updated_at, updated_by + audit cols\n- [ ] Table: `core.audit_logs` — audit_id (UUID PK), tenant_id, user_id, action_type, entity_type, entity_name, entity_id, old_value (JSONB), new_value (JSONB), ip_address, user_agent, session_id, success, error_message, created_at (NO updated_at — append-only)\n- [ ] All 16 tables include: `is_deleted BOOLEAN DEFAULT FALSE`, `deleted_at`, `deleted_by` (except audit_logs — never deleted)\n- [ ] Indexes: all FK columns, all status columns, all is_deleted columns, tenant_id on every tenant-scoped table, username + email on users, tenant_code on tenants\n- [ ] Run `flyway baseline` on existing DB to mark V001 as already applied\n- [ ] Validate: `spring.jpa.hibernate.ddl-auto=validate` passes on startup"
+  },
+  {
+    "title": "[Backend] Project Setup — Spring Boot + Config + Exception Handling",
+    "milestone": "Sprint 1 — Auth + Core Setup",
+    "labels": [
+      "backend",
+      "sprint-1"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Backend Project Setup\n**Blueprint ref:** Build Guide §4\n\n### Checklist\n- [ ] Spring Boot 3.2 + Java 17 project initialized via Spring Initializr\n- [ ] `pom.xml` dependencies: spring-boot-starter-web, data-jpa, security, validation, postgresql, flyway-core, jjwt-api (0.11.5), mapstruct (1.5.5), springdoc-openapi-starter-webmvc-ui (2.3.0), lombok\n- [ ] `application.properties`: DB connection, `ddl-auto=validate`, Flyway config (`baseline-on-migrate=true`), JWT secret + expiry, Swagger paths\n- [ ] `SunbirdCoreApplication.java` main class\n- [ ] `GlobalExceptionHandler.java`: handles NotFoundException (404), ConflictException (409), ValidationException (400), AccessDeniedException (403), generic 500\n- [ ] Custom exception types: `NotFoundException`, `ConflictException`, `BadRequestException`\n- [ ] CORS config: allow frontend origin (localhost:5173 for dev)\n- [ ] Swagger/OpenAPI at `/swagger-ui.html` + `/api-docs`\n- [ ] App starts clean, Flyway migrations applied, no errors"
+  },
+  {
+    "title": "[Backend] JWT Infrastructure — Token Service + Security Filter",
+    "milestone": "Sprint 1 — Auth + Core Setup",
+    "labels": [
+      "backend",
+      "sprint-1",
+      "auth"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## JWT Infrastructure\n**Blueprint ref:** Blueprint §1.2\n\n### Checklist\n- [ ] `JwtTokenService.java`: generateAccessToken (15 min), generateRefreshToken (7 days), validateToken, extractClaims\n- [ ] `tenant_id` + `user_id` + permissions embedded in JWT claims\n- [ ] Access + refresh tokens stored in HttpOnly cookies (not localStorage)\n- [ ] `JwtAuthFilter.java`: OncePerRequestFilter — extract token from cookie, validate, set SecurityContext\n- [ ] `SecurityConfig.java`: permit /auth/**, /swagger-ui/**, /api-docs/**; require authentication for all other endpoints\n- [ ] `UserDetailsService` implementation: load user + resolved permissions from DB\n- [ ] `POST /auth/refresh`: validate refresh token cookie, issue new access token\n- [ ] Remember Me: if checked at login, extends refresh token expiry to 30 days\n- [ ] Token invalidation: on password change, delete all is_active sessions for that user"
+  },
+  {
+    "title": "[Backend] Auth — Login, Logout, Session Check",
+    "milestone": "Sprint 1 — Auth + Core Setup",
+    "labels": [
+      "backend",
+      "sprint-1",
+      "auth"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Auth: Login / Logout / Session\n**Blueprint ref:** Blueprint §3.1\n\n### Checklist\n- [ ] `POST /auth/login`: validate credentials (username or email), issue JWT, create user_session row, write LOGIN to audit_logs. Returns: accessToken, refreshToken, userProfile, requirePasswordChange, mfaEnabled\n- [ ] `GET /auth/session`: validate existing cookie → return full user profile if valid (used for auto-login on page load)\n- [ ] `POST /auth/logout`: set session is_active=false, clear cookies, write LOGOUT to audit_logs\n- [ ] Failed login: write FAILED_LOGIN to audit_logs, increment failed_login_attempts\n- [ ] Account lockout: after 5 failed attempts set `account_locked_until = NOW() + 30 min`; reject login with lockout timestamp in response\n- [ ] Never reveal which field (username vs password) is wrong — always \"Invalid credentials\"\n- [ ] All queries scoped by tenant_id from JWT claims, never from request body"
+  },
+  {
+    "title": "[Backend] Auth — Password Reset + Force Change",
+    "milestone": "Sprint 1 — Auth + Core Setup",
+    "labels": [
+      "backend",
+      "sprint-1",
+      "auth"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Auth: Password Reset + Force Change\n**Blueprint ref:** Blueprint §3.2 + §3.3 + §3.4\n\n### Checklist\n- [ ] `POST /auth/forgot-password`: generate plain token, store SHA-256 hash in password_reset_tokens (24h expiry), send reset link via email. Always return 200 regardless of email existence\n- [ ] Rate limit: max 3 reset requests per email per hour (enforce in service layer)\n- [ ] `GET /auth/validate-reset-token?token=`: return { valid: bool, maskedEmail }. Invalid if: hash not found, used_at not null, or expires_at < NOW()\n- [ ] `POST /auth/reset-password`: body { token, newPassword }. Validate token, bcrypt new password, set used_at=NOW(), invalidate all user sessions, write UPDATE to audit_logs\n- [ ] Cannot reuse current password (bcrypt compare before saving)\n- [ ] `PUT /auth/change-password`: body { currentPassword, newPassword }. Verify current, set new, set require_password_change=false, redirect signal in response\n- [ ] Password complexity enforced server-side: min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character"
+  },
+  {
+    "title": "[Backend] Auth — MFA Verify",
+    "milestone": "Sprint 1 — Auth + Core Setup",
+    "labels": [
+      "backend",
+      "sprint-1",
+      "auth"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Auth: MFA Verify\n**Blueprint ref:** Blueprint §3.5\n\n### Checklist\n- [ ] `POST /auth/verify-mfa`: body { code }. Validate 6-digit TOTP against decrypted mfa_secret\n- [ ] TOTP window: ±30 second tolerance (accept current, previous, and next window)\n- [ ] On success: issue full-access JWT (upgrade from pre-auth MFA-scoped JWT), write MFA_SUCCESS to audit_logs\n- [ ] On failure: increment failed attempt counter, lock account after 5 wrong attempts, write MFA_FAILED to audit_logs\n- [ ] Pre-auth JWT: MFA scope only — rejected on all other endpoints until verified\n- [ ] mfa_secret stored encrypted via pgcrypto — never returned in any API response\n- [ ] mfa_enabled toggle: `PUT /users/:id/mfa` to enable/disable (requires current password confirmation)"
+  },
+  {
+    "title": "[Backend] Tenant CRUD + Status + Limits",
+    "milestone": "Sprint 2 — Tenant + Branch",
+    "labels": [
+      "backend",
+      "sprint-2",
+      "tenants"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Tenant CRUD\n**Blueprint ref:** Blueprint §5.1 + §5.2 + Build Guide §5\n\n### Checklist\n- [ ] `Tenant.java` JPA entity + `TenantStatus` enum (ACTIVE, INACTIVE, SUSPENDED, PENDING)\n- [ ] `TenantRepository.java`: findAllActive, existsByTenantCode, findByCode, countActiveUsers, countBranches\n- [ ] `TenantRequest.java` with @NotBlank, @Size, @Pattern validations\n- [ ] `TenantResponse.java` (never expose is_deleted, internal tokens, etc.)\n- [ ] `TenantMapper.java` MapStruct: toEntity, toResponse, updateEntity (IGNORE nulls on patch)\n- [ ] `TenantService.java`: getAll, getById, create (duplicate code check), update, softDelete\n- [ ] `GET /tenants?page=&search=&status=&type=` — paginated + filtered, tenant_id scoped from JWT\n- [ ] `GET /tenants/:id`\n- [ ] `POST /tenants` — 409 if tenant_code exists\n- [ ] `PUT /tenants/:id`\n- [ ] `DELETE /tenants/:id` — soft delete only\n- [ ] `PATCH /tenants/:id/status` — status toggle\n- [ ] `GET /tenants?code=` — async uniqueness check (debounce-friendly, returns { available: bool })\n- [ ] Update validation: max_users >= current active user count; max_branches >= current branch count\n- [ ] @PreAuthorize: TENANT:CREATE, TENANT:READ, TENANT:UPDATE, TENANT:DELETE, TENANT:EXPORT\n- [ ] Write CREATE / UPDATE / DELETE / STATUS_CHANGE to audit_logs with old_value + new_value JSONB"
+  },
+  {
+    "title": "[Backend] Tenant Config — CRUD + Encryption",
+    "milestone": "Sprint 2 — Tenant + Branch",
+    "labels": [
+      "backend",
+      "sprint-2",
+      "tenants"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Tenant Config\n**Blueprint ref:** Blueprint §5.4\n\n### Checklist\n- [ ] `TenantConfig.java` JPA entity mapping to `core.tenant_config`\n- [ ] `GET /tenants/:id/config` — all key-value pairs, encrypted values masked as `######` in response\n- [ ] `POST /tenants/:id/config` — add new config entry; if is_encrypted=true, encrypt value with pgcrypto before storing\n- [ ] `PUT /tenants/:id/config/:key` — update value (JSONB editor); re-encrypt if is_encrypted\n- [ ] `DELETE /tenants/:id/config/:key` — soft delete (is_deleted=true)\n- [ ] Reveal endpoint: `GET /tenants/:id/config/:key/reveal` — decrypt and return plaintext value; write REVEAL_CONFIG to audit_logs (this access must always be logged)\n- [ ] @PreAuthorize: CONFIG:READ, CONFIG:CREATE, CONFIG:UPDATE, CONFIG:DELETE\n- [ ] Write events to audit_logs for all mutations"
+  },
+  {
+    "title": "[Backend] Branch CRUD + HQ Validation",
+    "milestone": "Sprint 2 — Tenant + Branch",
+    "labels": [
+      "backend",
+      "sprint-2",
+      "branches"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Branch CRUD\n**Blueprint ref:** Blueprint §6\n\n### Checklist\n- [ ] `Branch.java` JPA entity + `BranchType` enum (MAIN, REGIONAL, SATELLITE)\n- [ ] `BranchRepository.java`: findByTenantId, existsByCodeAndTenant, findHQByTenant, countByTenant\n- [ ] `BranchRequest.java` + `BranchResponse.java` DTOs + `BranchMapper.java`\n- [ ] `GET /branches?tenantId=&status=&type=` paginated, tenant-scoped from JWT\n- [ ] `GET /branches/:id`\n- [ ] `POST /branches`: validate branch_code unique within tenant; if is_headquarters=true, validate no other HQ exists for that tenant; validate max_branches limit not exceeded\n- [ ] `PUT /branches/:id`\n- [ ] `PATCH /branches/:id/status`\n- [ ] `DELETE /branches/:id`: reject with 409 if is_headquarters=true AND other non-deleted branches exist for that tenant\n- [ ] `GET /branches?code=&tenantId=` — async uniqueness check\n- [ ] @PreAuthorize: BRANCH:CREATE, BRANCH:READ, BRANCH:UPDATE, BRANCH:DELETE\n- [ ] Write events to audit_logs"
+  },
+  {
+    "title": "[Backend] Dashboard Stats Endpoint",
+    "milestone": "Sprint 2 — Tenant + Branch",
+    "labels": [
+      "backend",
+      "sprint-2"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Dashboard Stats\n**Blueprint ref:** Blueprint §4\n\n### Checklist\n- [ ] `GET /dashboard/stats`: returns { tenantCount, userCount, activeSessionCount, auditCount24h }\n- [ ] All counts scoped by tenant_id from JWT (super-admin: global count; tenant-admin: own tenant)\n- [ ] tenantCount: COUNT active, non-deleted tenants\n- [ ] userCount: COUNT active, non-deleted users\n- [ ] activeSessionCount: COUNT user_sessions WHERE is_active=true\n- [ ] auditCount24h: COUNT audit_logs WHERE created_at >= NOW() - INTERVAL '24 hours'\n- [ ] `GET /audit?limit=10&sort=created_at:desc` — recent audit events for dashboard table (existing audit endpoint, just document this usage)\n- [ ] @PreAuthorize: TENANT:READ or USER:READ"
+  },
+  {
+    "title": "[Backend] User CRUD + Password + Bulk Status",
+    "milestone": "Sprint 3 — User Management",
+    "labels": [
+      "backend",
+      "sprint-3",
+      "users"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## User CRUD\n**Blueprint ref:** Blueprint §7.1 + §7.2\n\n### Checklist\n- [ ] `User.java` JPA entity + `UserStatus` enum (ACTIVE, INACTIVE, LOCKED, PENDING) + `UserType` enum\n- [ ] `UserRepository.java`: findByTenantId, existsByUsername, existsByEmail, existsByEmployeeIdAndTenant, findByBranch\n- [ ] `UserRequest.java` + `UserResponse.java` (never expose password_hash, mfa_secret, national_id_encrypted)\n- [ ] `UserMapper.java` MapStruct\n- [ ] `GET /users?page=&search=&status=&type=&branchId=` paginated, tenant-scoped\n- [ ] `GET /users/:id` full profile\n- [ ] `POST /users`: auto-generate temp password (bcrypt), set require_password_change=true, send welcome email with temp password, validate max_users limit\n- [ ] `PUT /users/:id`\n- [ ] `DELETE /users/:id`: soft delete; reject if deleting own account (compare with JWT user_id)\n- [ ] `PATCH /users/:id/status`: lock (LOCKED) / unlock (ACTIVE)\n- [ ] `POST /users/:id/reset-password`: admin-initiated reset, generate new temp password, send email, set require_password_change=true\n- [ ] `PATCH /users/bulk-status`: body { userIds: [], status } — bulk activate/deactivate\n- [ ] national_id stored encrypted (pgcrypto), never returned in response\n- [ ] Async uniqueness: `GET /users?username=` and `GET /users?email=` (both return { available: bool })\n- [ ] employee_id unique within tenant (if provided)\n- [ ] @PreAuthorize: USER:CREATE, USER:READ, USER:UPDATE, USER:DELETE\n- [ ] Write all mutations to audit_logs with old_value + new_value"
+  },
+  {
+    "title": "[Backend] User Sessions — View + Terminate",
+    "milestone": "Sprint 3 — User Management",
+    "labels": [
+      "backend",
+      "sprint-3",
+      "users"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## User Sessions\n**Blueprint ref:** Blueprint §7.4\n\n### Checklist\n- [ ] `UserSession.java` JPA entity (created at login in Auth service)\n- [ ] `GET /users/:id/sessions` — all sessions (active + expired), parse user_agent into browser + OS\n- [ ] `DELETE /sessions/:sessionId` — terminate: set is_active=false, write SESSION_TERMINATED to audit_logs\n- [ ] `DELETE /users/:id/sessions/all` — terminate all sessions for user\n- [ ] Session row includes: login_at, last_activity_at, expires_at, ip_address, user_agent, is_active\n- [ ] last_activity_at updated on each authenticated request (via JWT filter)\n- [ ] @PreAuthorize: USER:READ to view; USER:UPDATE to terminate"
+  },
+  {
+    "title": "[Backend] User Tenant Access — Grant + Revoke",
+    "milestone": "Sprint 3 — User Management",
+    "labels": [
+      "backend",
+      "sprint-3",
+      "users"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## User Tenant Access (Cross-tenant)\n**Blueprint ref:** Blueprint §7.5\n\n### Checklist\n- [ ] `UserTenantAccess.java` JPA entity\n- [ ] `GET /users/:id/tenant-access` — list all cross-tenant access records\n- [ ] `POST /users/:id/tenant-access/:tenantId` — grant access; record access_granted_by (from JWT) + access_granted_at\n- [ ] `DELETE /users/:id/tenant-access/:tenantId` — revoke access (soft delete)\n- [ ] @PreAuthorize: USER:READ to view; USER:UPDATE to grant/revoke\n- [ ] Write GRANT_ACCESS / REVOKE_ACCESS to audit_logs"
+  },
+  {
+    "title": "[Backend] Group CRUD + Members + Roles",
+    "milestone": "Sprint 4 — Groups + RBAC",
+    "labels": [
+      "backend",
+      "sprint-4",
+      "groups"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Group Full Stack\n**Blueprint ref:** Blueprint §8\n\n### Checklist\n- [ ] `Group.java`, `GroupMember.java`, `GroupRole.java` JPA entities\n- [ ] `GroupRepository.java` with member count + role count projections\n- [ ] `GET /groups?page=&search=&status=` paginated with counts, tenant-scoped\n- [ ] `GET /groups/:id`\n- [ ] `POST /groups`: unique group_code within tenant\n- [ ] `PUT /groups/:id`\n- [ ] `DELETE /groups/:id`: cascade soft delete to group_members + group_roles; show affected member count in error/confirmation response\n- [ ] `GET /groups/:id/members`\n- [ ] `POST /groups/:id/members/:userId`: add member (validate user belongs to same tenant)\n- [ ] `DELETE /groups/:id/members/:userId`: remove member\n- [ ] `GET /groups/:id/roles`\n- [ ] `POST /groups/:id/roles/:roleId`: assign role to group\n- [ ] `DELETE /groups/:id/roles/:roleId`: revoke role from group\n- [ ] @PreAuthorize: GROUP:CREATE/READ/UPDATE/DELETE, ASSIGN_ROLE, REVOKE_ROLE\n- [ ] Write all mutations to audit_logs"
+  },
+  {
+    "title": "[Backend] Role CRUD — System Role Protection",
+    "milestone": "Sprint 4 — Groups + RBAC",
+    "labels": [
+      "backend",
+      "sprint-4",
+      "roles"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Role CRUD\n**Blueprint ref:** Blueprint §9.1 + §9.2\n\n### Checklist\n- [ ] `Role.java` JPA entity + scope enum (GLOBAL, TENANT)\n- [ ] `RoleRepository.java` with permission count + assigned user count projections\n- [ ] `GET /roles?isSystem=&status=&search=` paginated with counts\n- [ ] `GET /roles/:id`\n- [ ] `POST /roles`: unique role_code\n- [ ] `PUT /roles/:id`: if is_system_role=true, reject changes to role_code and role_name (return 403 with clear message)\n- [ ] `DELETE /roles/:id`: if is_system_role=true, reject (return 403). Return warning payload: { affectedUsers: N, affectedGroups: N } before soft delete\n- [ ] @PreAuthorize: ROLE:CREATE, ROLE:READ, ROLE:UPDATE, ROLE:DELETE\n- [ ] Write events to audit_logs"
+  },
+  {
+    "title": "[Backend] Role Permissions Matrix — Grant, Revoke, Batch, Copy",
+    "milestone": "Sprint 4 — Groups + RBAC",
+    "labels": [
+      "backend",
+      "sprint-4",
+      "roles",
+      "permissions"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Role Permissions Matrix\n**Blueprint ref:** Blueprint §9.3\n\n### Checklist\n- [ ] `GET /roles/:id/permissions` — all currently granted permissions for role (keyed by moduleId+operation for matrix rendering)\n- [ ] `POST /roles/:id/permissions/:permId` — grant single permission; reject if role is system role\n- [ ] `DELETE /roles/:id/permissions/:permId` — revoke single permission; reject if role is system role\n- [ ] `POST /roles/:id/permissions/batch` — body { permissionIds: [] }; batch grant all listed permissions\n- [ ] `POST /roles/:id/permissions/copy` — body { fromRoleId }; copy all permissions from source role (overwrite); reject if target is system role\n- [ ] @PreAuthorize: GRANT_PERMISSION, REVOKE_PERMISSION\n- [ ] Each permission change writes individual GRANT_PERMISSION / REVOKE_PERMISSION record to audit_logs"
+  },
+  {
+    "title": "[Backend] User Role Assignment — Direct Assign/Revoke + Effective Permissions",
+    "milestone": "Sprint 4 — Groups + RBAC",
+    "labels": [
+      "backend",
+      "sprint-4",
+      "roles",
+      "users"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## User Role Assignment + Effective Permissions\n**Blueprint ref:** Blueprint §7.3\n\n### Checklist\n- [ ] `UserRole.java` JPA entity (user_roles table)\n- [ ] `GET /users/:id/roles` — direct roles only (not via groups)\n- [ ] `POST /users/:id/roles/:roleId` — assign role directly to user\n- [ ] `DELETE /users/:id/roles/:roleId` — revoke direct role\n- [ ] `GET /users/:id/permissions/effective` — merge user_roles permissions + group_roles permissions, flatten to unique permission list (used by frontend usePermission() hook via bootstrap call)\n- [ ] @PreAuthorize: ASSIGN_ROLE, REVOKE_ROLE, USER:READ\n- [ ] Write ASSIGN_ROLE / REVOKE_ROLE to audit_logs"
+  },
+  {
+    "title": "[Backend] Module + Permission CRUD",
+    "milestone": "Sprint 4 — Groups + RBAC",
+    "labels": [
+      "backend",
+      "sprint-4",
+      "permissions"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Module + Permission CRUD\n**Blueprint ref:** Blueprint §10.1 – §10.4\n\n### Checklist\n- [ ] `Module.java` + `Permission.java` JPA entities\n- [ ] `GET /modules` — ordered by display_order ASC\n- [ ] `POST /modules`, `PUT /modules/:id`, `DELETE /modules/:id` (system modules: reject DELETE; cascade soft delete to permissions)\n- [ ] `PATCH /modules/reorder` — body { orderedIds: [] }; bulk update display_order in a single transaction\n- [ ] is_system_module: cannot be changed after creation (reject on PUT)\n- [ ] `GET /permissions?moduleId=&operation=`\n- [ ] `POST /permissions`, `PUT /permissions/:id`\n- [ ] `DELETE /permissions/:id`: check if any roles use this permission; return warning { affectedRoles: N } before soft delete\n- [ ] @PreAuthorize: MODULE:CREATE/READ/UPDATE/DELETE, PERMISSION:CREATE/READ/UPDATE/DELETE\n- [ ] Write events to audit_logs"
+  },
+  {
+    "title": "[Backend] Permission Resolution Engine + @PreAuthorize Wiring",
+    "milestone": "Sprint 4 — Groups + RBAC",
+    "labels": [
+      "backend",
+      "sprint-4",
+      "permissions"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Permission Resolution Engine\n**Blueprint ref:** Blueprint §1.2\n\n### Checklist\n- [ ] `PermissionService.java`: resolveEffectivePermissions(userId) — collect direct user_roles → permissions + group memberships → group_roles → permissions; deduplicate into Set<String> of \"MODULE:OPERATION\" strings\n- [ ] Resolved permissions loaded into Spring Security `GrantedAuthority` list at authentication time\n- [ ] Cache resolved permissions per user per session (invalidate on role/group change)\n- [ ] Every controller method annotated with `@PreAuthorize(\"hasAuthority('MODULE:OPERATION')\")`\n- [ ] Tenant scoping enforced: permissions valid only within user's active tenant context\n- [ ] Unit tests covering: direct role only, group-inherited only, overlap between direct + group, system role bypass\n- [ ] Integration test: verify 403 returned when permission missing"
+  },
+  {
+    "title": "[Backend] Audit Log — Query, Filter, Export",
+    "milestone": "Sprint 5 — Audit + Security + Dashboard Polish",
+    "labels": [
+      "backend",
+      "sprint-5",
+      "audit"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Audit Log\n**Blueprint ref:** Blueprint §11.1 + §11.2\n\n### Checklist\n- [ ] `AuditLog.java` JPA entity — append-only (NO update, NO delete endpoints ever)\n- [ ] `AuditService.java`: logEvent(userId, tenantId, actionType, entityType, entityName, entityId, oldValue, newValue, ipAddress, userAgent, sessionId, success, errorMessage) — called by all service methods\n- [ ] Supported actionTypes (15): CREATE, UPDATE, DELETE, LOGIN, LOGOUT, FAILED_LOGIN, MFA_SUCCESS, MFA_FAILED, LOCK, UNLOCK, RESET_PASSWORD, GRANT_ACCESS, REVOKE_ACCESS, SESSION_TERMINATED, REVEAL_CONFIG\n- [ ] `GET /audit?from=&to=&userId=&actionType=&entityType=&success=&ipAddress=&page=`\n  - Date range REQUIRED — reject without it (400)\n  - Super-admin: all tenants; tenant-admin: own tenant only; regular admin: own actions only\n- [ ] `GET /audit/:id` — full record including old_value + new_value JSONB\n- [ ] `GET /audit/export?format=csv&{filters}` — streaming CSV (include filter summary as header rows)\n- [ ] 3-year retention: no automated purge\n- [ ] @PreAuthorize: AUDIT:READ, AUDIT:EXPORT\n- [ ] CBAHI/HIPAA: no UPDATE or DELETE endpoints on audit_logs — ever"
+  },
+  {
+    "title": "[Backend] Active Sessions Monitor",
+    "milestone": "Sprint 5 — Audit + Security + Dashboard Polish",
+    "labels": [
+      "backend",
+      "sprint-5",
+      "security"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Active Sessions Monitor\n**Blueprint ref:** Blueprint §11.3\n\n### Checklist\n- [ ] `GET /sessions/active?page=&search=` — only is_active=true; super-admin sees all, tenant-scoped sees own\n- [ ] Response includes per session: user fullName + username (link), tenant, login_at, last_activity_at, expires_at, ip_address, user_agent (parsed into browser + OS), duration (login_at → NOW()), isNearTimeout (last_activity > 25 min → true)\n- [ ] `DELETE /sessions/:sessionId` — force terminate: is_active=false, write SESSION_TERMINATED to audit_logs\n- [ ] `DELETE /users/:id/sessions/all` — terminate all active sessions for a user (already in Sprint 3; ensure it's called from session monitor too)\n- [ ] last_activity_at updated on each authenticated request in JwtAuthFilter\n- [ ] @PreAuthorize: SESSION:READ, SESSION:DELETE"
+  },
+  {
+    "title": "[Backend] Failed Login Report + Account Unlock",
+    "milestone": "Sprint 5 — Audit + Security + Dashboard Polish",
+    "labels": [
+      "backend",
+      "sprint-5",
+      "security",
+      "audit"
+    ],
+    "body": "**Planned assignee:** Zeina Itriq\n\n## Failed Login Report\n**Blueprint ref:** Blueprint §11.4\n\n### Checklist\n- [ ] `GET /audit?actionType=FAILED_LOGIN&from=&to=` — date range required, default last 24h; reuse existing audit query endpoint with this filter\n- [ ] `GET /security/failed-login-summary?from=&to=` — returns { totalFailed, uniqueIPs, lockedAccounts }\n  - lockedAccounts: COUNT users WHERE account_locked_until > NOW()\n- [ ] Response rows include: username tried (entity_name), resolved user (user_id → name, nullable), ip_address, failed_login_attempts count, account_locked_until\n- [ ] Flag high-risk IPs: isHighRisk=true if same IP appears >5 times in the time window\n- [ ] `PATCH /users/:id/status` (reuse existing endpoint): unlock = set status=ACTIVE, reset failed_login_attempts=0, clear account_locked_until\n- [ ] Export: `GET /audit/export?format=csv&actionType=FAILED_LOGIN&{filters}`\n- [ ] @PreAuthorize: AUDIT:READ, USER:UPDATE (for unlock)"
+  },
+  {
+    "title": "[DB] V002 — Seed System Roles, Modules, Permissions",
+    "milestone": "Sprint 5 — Audit + Security + Dashboard Polish",
+    "labels": [
+      "db",
+      "sprint-5",
+      "permissions"
+    ],
+    "body": "**Planned assignee:** Alaa Himour\n\n## DB Migration: V002__seed_system_roles_modules_permissions.sql\n**File:** `sunbird.core.db/migrations/core/V002__seed_system_roles_modules_permissions.sql`\n\n### Checklist\n- [ ] Seed system modules (is_system_module=true) with display_order:\n  1. AUTH, 2. DASHBOARD, 3. TENANT, 4. BRANCH, 5. USER, 6. GROUP, 7. ROLE, 8. MODULE, 9. PERMISSION, 10. AUDIT, 11. SESSION, 12. SECURITY, 13. CONFIG\n- [ ] Seed permissions for each module × applicable operations (CREATE/READ/UPDATE/DELETE/EXPORT/PRINT/APPROVE)\n  - AUTH: READ only (LOGIN is an event, not a permission)\n  - AUDIT: READ, EXPORT (no CREATE/UPDATE/DELETE — append-only)\n  - SESSION: READ, DELETE\n  - CONFIG: CREATE, READ, UPDATE, DELETE\n  - All others: full 7 operations\n- [ ] Seed system roles (is_system_role=true):\n  - SUPER_ADMIN: all permissions across all modules\n  - TENANT_ADMIN: all permissions scoped to own tenant (exclude TENANT:CREATE, MODULE:*, PERMISSION:*)\n  - COMPLIANCE_OFFICER: AUDIT:READ, AUDIT:EXPORT, SESSION:READ only\n  - REGULAR_ADMIN: read-only across most modules; no DELETE, no EXPORT\n- [ ] Assign permissions to system roles via role_permissions inserts\n- [ ] All seeds idempotent: use INSERT ... ON CONFLICT DO NOTHING\n- [ ] Verify seed data matches @PreAuthorize annotations in controllers"
+  }
+]
