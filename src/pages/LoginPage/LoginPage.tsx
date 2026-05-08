@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Anchor,
   Button,
@@ -13,24 +13,39 @@ import { useForm } from '@mantine/form'
 import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 import classes from './LoginPage.module.css'
+import { useLoginUserMutation } from '../../redux/features/auth/authService'
+import { useEffect } from 'react'
+import { notifications } from '@mantine/notifications'
+import { useFormMutation } from '../../hooks/useFormMutation'
 
 const loginSchema = z.object({
-  email: z.email('Invalid email'),
+  username: z.string(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
 export function LoginPage() {
+  const [loginUserMutation] = useLoginUserMutation()
+  const navigate = useNavigate()
   const form = useForm<LoginFormValues>({
     mode: 'uncontrolled',
-    initialValues: { email: '', password: '' },
+    initialValues: { username: '', password: '' },
     validate: zod4Resolver(loginSchema),
   })
 
-  const handleSubmit = (values: LoginFormValues) => {
-    console.log('Login', values)
-    // TODO: call auth API
+  const loginUser = useFormMutation(loginUserMutation, form)
+
+  const handleSubmit = async (values: LoginFormValues) => {
+    const result = await loginUser(values);
+    if ('data' in result) {
+      notifications.show({
+        title: 'Login successful',
+        message: `Welcome back, ${result.data?.username}!`,
+        color: 'green',
+      });
+      navigate('/dashboard');
+    }
   }
 
   return (
@@ -43,12 +58,11 @@ export function LoginPage() {
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack gap="md">
             <TextInput
-              label="Email"
-              placeholder="you@example.com"
-              type="email"
+              label="Username"
+              placeholder="Your username"
               size="md"
-              key={form.key('email')}
-              {...form.getInputProps('email')}
+              key={form.key('username')}
+              {...form.getInputProps('username')}
             />
             <PasswordInput
               label="Password"

@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 import {
   Anchor,
   AppShell,
@@ -6,6 +6,8 @@ import {
   Group,
   ScrollArea,
   Title,
+  UnstyledButton,
+  Text,
 } from '@mantine/core'
 import {
   BarChart3,
@@ -15,7 +17,10 @@ import {
   FileText,
   Settings,
   Shield,
+  LogOut,
 } from 'lucide-react'
+import { useAppDispatch } from '../../redux/store'
+import { authSlice } from '../../redux/features/auth/authSlice'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { NavbarLinksGroup } from '../../components/NavbarLinksGroup/NavbarLinksGroup'
 import classes from './RootLayout.module.css'
@@ -57,6 +62,14 @@ const navData = [
 ]
 
 export function RootLayout() {
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    dispatch(authSlice.actions.logout())
+    navigate('/auth/login', { replace: true })
+  }
+
   const links = navData.map((item) => (
     <NavbarLinksGroup
       key={item.label}
@@ -89,6 +102,12 @@ export function RootLayout() {
           <Anchor component={Link} to="/settings" size="sm" c="dimmed">
             Account & settings
           </Anchor>
+          <UnstyledButton onClick={handleLogout} mt="sm" w="100%">
+            <Group gap="xs">
+              <LogOut size={16} />
+              <Text size="sm">Logout</Text>
+            </Group>
+          </UnstyledButton>
         </AppShell.Section>
       </AppShell.Navbar>
       <AppShell.Main>
