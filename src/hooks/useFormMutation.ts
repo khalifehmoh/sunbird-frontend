@@ -1,6 +1,5 @@
 import type { UseFormReturnType } from '@mantine/form';
 import type { ErrorResponse } from '../redux/baseQuery';
-
 type MutationTrigger<TArg, TResult> = (arg: TArg) => Promise<
   | { data: TResult; error?: undefined }
   | { error: unknown; data?: undefined }

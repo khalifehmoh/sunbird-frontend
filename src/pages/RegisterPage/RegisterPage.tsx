@@ -1,5 +1,5 @@
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Box,
   Paper,
@@ -17,6 +17,8 @@ import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 import classes from './RegisterPage.module.css'
 import { useRegisterUserMutation } from '../../redux/features/auth/authService'
+import { notifications } from '@mantine/notifications'
+import { useFormMutation } from '../../hooks/useFormMutation'
 
 const registerSchema = z
   .object({
@@ -36,7 +38,8 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 export function RegisterPage() {
-  const [registerUser, {isLoading}] = useRegisterUserMutation()
+  const [registerUserMutation] = useRegisterUserMutation()
+  const navigate = useNavigate()
   const form = useForm<RegisterFormValues>({
     mode: 'uncontrolled',
     initialValues: {
@@ -51,10 +54,18 @@ export function RegisterPage() {
     validate: zod4Resolver(registerSchema),
   })
 
-  const handleSubmit = (values: RegisterFormValues) => {
-    console.log('Register', values);
-    registerUser(values)
-    // TODO: call auth API
+  const registerUser = useFormMutation(registerUserMutation, form)
+
+  const handleSubmit = async (values: RegisterFormValues) => {
+    const result = await registerUser(values)
+    if ('data' in result) {
+      notifications.show({
+        title: 'Account created',
+        message: 'Please login to continue',
+        color: 'green',
+      })
+      navigate('/auth/login')
+    }
   }
 
   return (

@@ -25,6 +25,16 @@ export const authSlice = createSlice({
             state.username = action.payload.username;
             state.email = action.payload.email;
             state.role = action.payload.role;
+        },
+        logout: (state) => {
+            state.accessToken = '';
+            state.refreshToken = '';
+            state.tokenType = '';
+            state.accessTokenExpiresIn = 0;
+            state.refreshTokenExpiresIn = 0;
+            state.username = '';
+            state.email = '';
+            state.role = '';
         }
     }
 });

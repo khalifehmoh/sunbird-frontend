@@ -14,7 +14,6 @@ import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 import classes from './LoginPage.module.css'
 import { useLoginUserMutation } from '../../redux/features/auth/authService'
-import { useEffect } from 'react'
 import { notifications } from '@mantine/notifications'
 import { useFormMutation } from '../../hooks/useFormMutation'
 

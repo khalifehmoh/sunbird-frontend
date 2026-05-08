@@ -1,18 +1,19 @@
 import { notifications } from '@mantine/notifications';
-import { fetchBaseQuery, type BaseQueryApi, type RootState, type BaseQueryFn, type FetchArgs, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
+import { fetchBaseQuery, type BaseQueryApi, type BaseQueryFn, type FetchArgs, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
+import { authSlice } from './features/auth/authSlice';
 
-interface ErrorResponse {
+export interface ErrorResponse {
     message: string;
     error: string;
     status: number;
     timestamp: string;
-    errors: string[];
+    errors?: string[];
 }
 
 const rawBaseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_BASE_URL,
     prepareHeaders: (headers, api) => {
-      const token = (api.getState()).auth.accessToken;
+      const token = (api.getState() as { auth: { accessToken: string } }).auth.accessToken;
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
