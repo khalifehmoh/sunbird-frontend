@@ -1,0 +1,9 @@
+---
+description: Always read the project blueprint before answering
+alwaysApply: true
+---
+
+# Project Blueprint
+
+Always read `docs/admin_blueprint_v3.md` before responding to questions about architecture, routing, or feature scope.
+

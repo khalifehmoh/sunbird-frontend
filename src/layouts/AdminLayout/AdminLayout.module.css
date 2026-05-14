@@ -1,0 +1,20 @@
+.links {
+  flex: 1;
+  margin-left: calc(var(--mantine-spacing-md) * -1);
+  margin-right: calc(var(--mantine-spacing-md) * -1);
+
+  .linksInner {
+    padding-top: var(--mantine-spacing-xl);
+    padding-bottom: var(--mantine-spacing-xl);
+  }
+}
+
+.sectionLabel {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
+  margin-top: var(--mantine-spacing-sm);
+}

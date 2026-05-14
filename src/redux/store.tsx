@@ -4,6 +4,8 @@ import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, pers
 import storage from 'redux-persist/lib/storage';
 import authReducer from './features/auth/authSlice';
 import { authApi } from './features/auth/authService';
+import { dashboardApi } from './features/dashboard/dashboardApi';
+import { tenantsApi } from './features/tenants/tenantsApi';
 
 const authPersistConfig = {
   key: 'auth',
@@ -14,6 +16,8 @@ const authPersistConfig = {
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   [authApi.reducerPath]: authApi.reducer,
+  [dashboardApi.reducerPath]: dashboardApi.reducer,
+  [tenantsApi.reducerPath]: tenantsApi.reducer,
 });
 
 export const store = configureStore({
@@ -23,7 +27,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(authApi.middleware),
+    }).concat(authApi.middleware, dashboardApi.middleware, tenantsApi.middleware),
 })
 
 export const persistor = persistStore(store);

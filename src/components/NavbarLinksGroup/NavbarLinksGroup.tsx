@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   Collapse,
   Group,
@@ -7,6 +7,7 @@ import {
   ThemeIcon,
   UnstyledButton,
 } from '@mantine/core'
+import clsx from 'clsx'
 import { ChevronRight } from 'lucide-react'
 import classes from './NavbarLinksGroup.module.css'
 
@@ -21,6 +22,16 @@ interface NavbarLinksGroupProps {
   initiallyOpened?: boolean
   link?: string
   links?: NavbarLinkItem[]
+  /**
+   * Passed to NavLink `end` for single-link items only.
+   * Omit to treat `/` and `/admin` as exact (so nested routes don’t stay “Dashboard”).
+   */
+  end?: boolean
+}
+
+function isNestedActive(pathname: string, to: string) {
+  if (pathname === to) return true
+  return pathname.startsWith(`${to}/`)
 }
 
 export function NavbarLinksGroup({
@@ -29,37 +40,54 @@ export function NavbarLinksGroup({
   initiallyOpened = false,
   link,
   links,
+  end,
 }: NavbarLinksGroupProps) {
   const location = useLocation()
+  const pathname = location.pathname
   const hasLinks = Array.isArray(links) && links.length > 0
   const isLink = typeof link === 'string'
+
+  const groupHasActiveChild = useMemo(
+    () =>
+      Boolean(
+        hasLinks &&
+          links!.some((item) => isNestedActive(pathname, item.link)),
+      ),
+    [hasLinks, links, pathname],
+  )
+
   const [opened, setOpened] = useState(initiallyOpened)
 
+  useEffect(() => {
+    if (groupHasActiveChild) setOpened(true)
+  }, [groupHasActiveChild])
+
+  const inferredEnd =
+    end ?? (link === '/' || link === '/admin')
+
   const content = hasLinks ? (
-    links.map((item) => (
-      <Link
-        to={item.link}
+    links!.map((item) => (
+      <NavLink
         key={item.label}
-        className={classes.link}
-        data-active={location.pathname === item.link ? true : undefined}
-        onClick={(e) => e.currentTarget.focus()}
+        to={item.link}
+        end={false}
+        className={({ isActive }) =>
+          clsx(classes.link, isActive && classes.linkActive)
+        }
       >
         {item.label}
-      </Link>
+      </NavLink>
     ))
   ) : null
 
   if (isLink && !hasLinks) {
-    const active = location.pathname === link
     return (
-      <Link
+      <NavLink
         to={link}
-        className={classes.control}
-        style={{
-          textDecoration: 'none',
-          color: 'inherit',
-          ...(active ? { backgroundColor: 'var(--mantine-color-light)' } : {}),
-        }}
+        end={inferredEnd}
+        className={({ isActive }) =>
+          clsx(classes.control, classes.controlLink, isActive && classes.controlActive)
+        }
       >
         <Group gap="xs">
           <ThemeIcon size={22} variant="light">
@@ -69,7 +97,7 @@ export function NavbarLinksGroup({
             {label}
           </Text>
         </Group>
-      </Link>
+      </NavLink>
     )
   }
 
@@ -77,7 +105,7 @@ export function NavbarLinksGroup({
     <>
       <UnstyledButton
         onClick={() => setOpened((o) => !o)}
-        className={classes.control}
+        className={clsx(classes.control, groupHasActiveChild && classes.controlActive)}
       >
         <Group justify="space-between" gap={0}>
           <Group gap="xs">

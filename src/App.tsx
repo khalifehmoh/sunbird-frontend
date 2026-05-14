@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { AppShell, Box, Container, Group, Title, Text } from '@mantine/core'
 import { ThemeToggle } from './components/ThemeToggle'
 
