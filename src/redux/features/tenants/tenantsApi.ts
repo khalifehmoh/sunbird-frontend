@@ -1,45 +1,20 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { coreBaseQuery } from '../../baseQuery'
+export type {
+  OrganizationType,
+  TenantStatus,
+  TenantListItem,
+  TenantsPageResponse,
+  GetTenantsArgs,
+  CreateTenantRequest,
+} from './tenantsTypes'
 
-export type OrganizationType =
-  | 'HOSPITAL'
-  | 'NETWORK'
-  | 'CLINIC'
-  | 'LAB'
-  | 'PHARMACY'
-
-export type TenantStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING'
-
-/** Matches GET /tenants list payload */
-export interface TenantListItem {
-  tenantId?: string
-  tenantCode: string
-  tenantName?: string
-  tenantNameAr: string | null
-  organizationType: OrganizationType
-  licenseNumber: string | null
-  status: TenantStatus
-  maxUsers: number
-  createdAt: string | null
-  updatedAt: string | null
-}
-
-export interface TenantsPageResponse {
-  content: TenantListItem[]
-  totalElements: number
-  totalPages: number
-  page: number
-  size: number
-}
-
-export interface GetTenantsArgs {
-  page: number
-  size: number
-  search: string
-  status: TenantStatus | ''
-  type: OrganizationType | ''
-  sort?: string
-}
+import type {
+  TenantListItem,
+  TenantsPageResponse,
+  GetTenantsArgs,
+  CreateTenantRequest,
+} from './tenantsTypes'
 
 export const tenantsApi = createApi({
   reducerPath: 'tenantsApi',
@@ -60,29 +35,43 @@ export const tenantsApi = createApi({
       },
       providesTags: [{ type: 'TenantList', id: 'LIST' }],
     }),
-    // patchTenantStatus: builder.mutation<
-    //   unknown,
-    //   { tenantId: string; status: TenantStatus }
-    // >({
-    //   query: ({ tenantId, status }) => ({
-    //     url: `/tenants/${tenantId}/status`,
-    //     method: 'PATCH',
-    //     body: { status },
-    //   }),
-    //   invalidatesTags: [{ type: 'TenantList', id: 'LIST' }],
-    // }),
-    // deleteTenant: builder.mutation<void, string>({
-    //   query: (tenantId) => ({
-    //     url: `/tenants/${tenantId}`,
-    //     method: 'DELETE',
-    //   }),
-    //   invalidatesTags: [{ type: 'TenantList', id: 'LIST' }],
-    // }),
+    getTenant: builder.query<TenantListItem, string>({
+      query: (tenantId) => `/tenants/${tenantId}`,
+      providesTags: [{ type: 'TenantList', id: 'LIST' }],
+    }),
+    createTenant: builder.mutation<TenantListItem, CreateTenantRequest>({
+      query: (tenant) => ({
+        url: '/tenants',
+        method: 'POST',
+        body: tenant,
+      }),
+      invalidatesTags: (_, error) =>
+        error ? [] : [{ type: 'TenantList', id: 'LIST' }],
+    }),
+    updateTenant: builder.mutation<TenantListItem, CreateTenantRequest>({
+      query: (tenant) => ({
+        url: `/tenants/${tenant.tenantId}`,
+        method: 'PUT',
+        body: tenant,
+      }),
+      invalidatesTags: (_, error) =>
+        error ? [] : [{ type: 'TenantList', id: 'LIST' }],
+    }),
+    deleteTenant: builder.mutation<void, string>({
+      query: (tenantId) => ({
+        url: `/tenants/${tenantId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_, error) =>
+        error ? [] : [{ type: 'TenantList', id: 'LIST' }],
+    })
   }),
 })
 
 export const {
   useGetTenantsQuery,
-  // usePatchTenantStatusMutation,
-  // useDeleteTenantMutation,
+  useGetTenantQuery,
+  useCreateTenantMutation,
+  useUpdateTenantMutation,
+  useDeleteTenantMutation,
 } = tenantsApi

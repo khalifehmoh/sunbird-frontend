@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { TenantForm } from '../TenantForm/TenantForm'
 import {
   ActionIcon,
   Badge,
@@ -7,7 +8,6 @@ import {
   Button,
   Group,
   Menu,
-  type MantineColor,
   Pagination,
   Paper,
   Select,
@@ -33,13 +33,20 @@ import {
 } from 'lucide-react'
 import dayjs from 'dayjs'
 import {
-  type OrganizationType,
-  type TenantListItem,
-  type TenantStatus,
-  // useDeleteTenantMutation,
+  useDeleteTenantMutation,
   useGetTenantsQuery,
-  // usePatchTenantStatusMutation,
 } from '../../../../redux/features/tenants/tenantsApi'
+import type {
+  OrganizationType,
+  TenantListItem,
+  TenantStatus,
+  GetTenantsArgs,
+} from '../../../../redux/features/tenants/tenantsTypes'
+import {
+  ORG_TYPE_OPTIONS,
+  TENANT_STATUS_OPTIONS,
+  TENANT_STATUS_COLORS,
+} from '../tenantConstants'
 import { SortTableHeader } from '../../../../components/SortTableHeader/SortTableHeader'
 import { StatusBadge } from '../../../../components/StatusBadge/StatusBadge'
 import { usePermissions } from '../../../../hooks/usePermissions'
@@ -58,27 +65,13 @@ const SORT_QUERY_KEY: Record<string, string> = {
 
 const ORG_TYPES: { value: OrganizationType | ''; label: string }[] = [
   { value: '', label: 'All types' },
-  { value: 'HOSPITAL', label: 'Hospital' },
-  { value: 'NETWORK', label: 'Network' },
-  { value: 'CLINIC', label: 'Clinic' },
-  { value: 'LAB', label: 'Lab' },
-  { value: 'PHARMACY', label: 'Pharmacy' },
+  ...ORG_TYPE_OPTIONS,
 ]
 
 const STATUSES: { value: TenantStatus | ''; label: string }[] = [
   { value: '', label: 'All statuses' },
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'SUSPENDED', label: 'Suspended' },
-  { value: 'PENDING', label: 'Pending' },
+  ...TENANT_STATUS_OPTIONS,
 ]
-
-const TENANT_STATUS_COLORS = {
-  ACTIVE: 'teal',
-  INACTIVE: 'gray',
-  SUSPENDED: 'orange',
-  PENDING: 'blue',
-} as const satisfies Record<TenantStatus, MantineColor>
 
 export function TenantListPage() {
   const navigate = useNavigate()
@@ -87,6 +80,9 @@ export function TenantListPage() {
   const canUpdate = usePermissions('TENANT:UPDATE')
   const canDelete = usePermissions('TENANT:DELETE')
   const canExport = usePermissions('TENANT:EXPORT')
+
+  const [formOpened, setFormOpened] = useState(false)
+  const [editingTenantId, setEditingTenantId] = useState<string | undefined>()
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
@@ -102,13 +98,13 @@ export function TenantListPage() {
 
   const sortParam = `${SORT_QUERY_KEY[sortField] ?? sortField}:${sortDir}`
 
-  const queryArgs = useMemo(
+  const queryArgs: GetTenantsArgs = useMemo(
     () => ({
       page: page - 1,
       size: PAGE_SIZE,
       search: debouncedSearch,
-      status: filterStatus,
-      type: filterType,
+      status: filterStatus as TenantStatus | '',
+      type: filterType as OrganizationType | '',
       sort: sortParam,
     }),
     [page, debouncedSearch, filterStatus, filterType, sortParam],
@@ -119,8 +115,7 @@ export function TenantListPage() {
     { skip: !canRead },
   )
 
-  // const [patchStatus] = usePatchTenantStatusMutation()
-  // const [deleteTenant] = useDeleteTenantMutation()
+  const [deleteTenant] = useDeleteTenantMutation()
 
   function handleSort(field: string) {
     if (field === sortField) {
@@ -131,33 +126,39 @@ export function TenantListPage() {
     }
   }
 
-  const confirmSetStatus = (row: TenantListItem, status: TenantStatus) => {
-    if (status === row.status) return
-    modals.openConfirmModal({
-      title: 'Update tenant status',
-      children: (
-        <Text size="sm">
-          Set <strong>{row.tenantName}</strong> ({row.tenantCode}) to{' '}
-          <strong>{status}</strong>?
-        </Text>
-      ),
-      labels: { confirm: 'Save', cancel: 'Cancel' },
-      // onConfirm: () => patchStatus({ tenantId: row.tenantId, status }),
-    })
-  }
+  // const confirmSetStatus = (row: TenantListItem, status: TenantStatus) => {
+  //   if (status === row.status) return
+  //   modals.openConfirmModal({
+  //     title: 'Update tenant status',
+  //     children: (
+  //       <Text size="sm">
+  //         Set <strong>{row.tenantName}</strong> ({row.tenantCode}) to{' '}
+  //         <strong>{status}</strong>?
+  //       </Text>
+  //     ),
+  //     labels: { confirm: 'Save', cancel: 'Cancel' },
+  //     // onConfirm: () => patchStatus({ tenantId: row.tenantId, status }),
+  //   })
+  // }
 
   const confirmDelete = (row: TenantListItem) => {
+    if (!row.tenantId) return
     modals.openConfirmModal({
       title: 'Delete tenant',
       children: (
         <Text size="sm">
-          Soft-delete <strong>{row.tenantName}</strong> ({row.tenantCode})? This
-          can be audited and may be reversible only from the backend.
+          Delete <strong>{row.tenantName}</strong> ({row.tenantCode})?
         </Text>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
-      // onConfirm: () => deleteTenant(row.tenantId),
+      onConfirm: () => deleteTenant(row.tenantId as string).unwrap().then(() => {
+        notifications.show({
+          title: 'Tenant deleted',
+          message: `${row.tenantName} has been deleted successfully.`,
+          color: 'green',
+        })
+      }),
     })
   }
 
@@ -203,9 +204,11 @@ export function TenantListPage() {
             ) : null}
             {canCreate ? (
               <Button
-                component={Link}
-                to="/admin/tenants/new"
                 leftSection={<Plus size={18} />}
+                onClick={() => {
+                  setEditingTenantId(undefined)
+                  setFormOpened(true)
+                }}
               >
                 Create tenant
               </Button>
@@ -411,8 +414,10 @@ export function TenantListPage() {
                                   variant="subtle"
                                   color="gray"
                                   aria-label="Edit tenant"
-                                  component={Link}
-                                  to={`/admin/tenants/${row.tenantId}/edit`}
+                                  onClick={() => {
+                                    setEditingTenantId(row.tenantId)
+                                    setFormOpened(true)
+                                  }}
                                 >
                                   <Pencil size={18} />
                                 </ActionIcon>
@@ -438,12 +443,12 @@ export function TenantListPage() {
                                           <Menu.Item
                                             key={s.value}
                                             disabled={row.status === s.value}
-                                            onClick={() =>
-                                              confirmSetStatus(
-                                                row,
-                                                s.value as TenantStatus,
-                                              )
-                                            }
+                                            // onClick={() =>
+                                            //   confirmSetStatus(
+                                            //     row,
+                                            //     s.value as TenantStatus,
+                                            //   )
+                                            // }
                                           >
                                             Set {s.label}
                                           </Menu.Item>
@@ -493,6 +498,12 @@ export function TenantListPage() {
           ) : null}
         </Paper>
       </Stack>
+
+      <TenantForm
+        opened={formOpened}
+        onClose={() => setFormOpened(false)}
+        tenantId={editingTenantId}
+      />
     </Box>
   )
 }

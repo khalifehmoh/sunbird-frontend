@@ -71,6 +71,13 @@ const SHARED = {
     fontWeight: '600',
   },
   respectReducedMotion: true,
+  components: {
+    Modal: {
+      styles: {
+        title: { fontWeight: 700 },
+      },
+    },
+  },
 }
 
 export type MedicalPresetId = 'clinicalBlue' | 'deepNavy' | 'healingTeal' | 'slateCare'
