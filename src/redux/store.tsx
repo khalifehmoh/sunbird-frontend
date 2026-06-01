@@ -6,6 +6,7 @@ import authReducer from './features/auth/authSlice';
 import { authApi } from './features/auth/authService';
 import { dashboardApi } from './features/dashboard/dashboardApi';
 import { tenantsApi } from './features/tenants/tenantsApi';
+import { branchesApi } from './features/branches/branchesApi';
 
 const authPersistConfig = {
   key: 'auth',
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
   [dashboardApi.reducerPath]: dashboardApi.reducer,
   [tenantsApi.reducerPath]: tenantsApi.reducer,
+  [branchesApi.reducerPath]: branchesApi.reducer,
 });
 
 export const store = configureStore({
@@ -27,7 +29,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(authApi.middleware, dashboardApi.middleware, tenantsApi.middleware),
+    }).concat(authApi.middleware, dashboardApi.middleware, tenantsApi.middleware, branchesApi.middleware),
 })
 
 export const persistor = persistStore(store);

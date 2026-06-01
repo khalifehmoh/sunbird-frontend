@@ -5,6 +5,7 @@ import { HomePage } from '../pages/HomePage/HomePage'
 import { PlaceholderPage } from '../pages/PlaceholderPage/PlaceholderPage'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage/AdminDashboardPage'
 import { TenantListPage } from '../pages/admin/TenantManagement/TenantListPage/TenantListPage'
+import { BranchListPage } from '../pages/admin/BranchManagement/BranchListPage/BranchListPage'
 import { LoginPage } from '../pages/LoginPage/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage/RegisterPage'
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage/ForgotPasswordPage'
@@ -32,7 +33,10 @@ export const router = createBrowserRouter([
           { path: 'tenants/:id/edit', element: <PlaceholderPage title="Edit tenant" /> },
           { path: 'tenants', element: <TenantListPage /> },
           { path: 'tenants/:id', element: <PlaceholderPage title="Tenant detail" /> },
-          { path: 'branches', element: <PlaceholderPage title="Branches" /> },
+          { path: 'branches/new', element: <PlaceholderPage title="Create branch" /> },
+          { path: 'branches/:id/edit', element: <PlaceholderPage title="Edit branch" /> },
+          { path: 'branches', element: <BranchListPage /> },
+          { path: 'branches/:id', element: <PlaceholderPage title="Branch detail" /> },
           { path: 'users', element: <PlaceholderPage title="Users" /> },
           { path: 'groups', element: <PlaceholderPage title="Groups" /> },
           { path: 'roles', element: <PlaceholderPage title="Roles" /> },
