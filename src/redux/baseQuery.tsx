@@ -18,13 +18,7 @@ export interface ErrorResponse {
 
 const rawBaseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_BASE_URL,
-    prepareHeaders: (headers, api) => {
-      const token = (api.getState() as { auth: { accessToken: string } }).auth.accessToken;
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
+    credentials: 'include',
 });
 
 // ---------------------------------------------------------------------------
@@ -121,8 +115,11 @@ export const coreBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
     const result = await rawBaseQuery(args, api, extraOptions);
 
     if (result.error) {
-        const { data } = result.error as { data: ErrorResponse };
-        if (data.message) {
+        const { data, status } = result.error as { data: ErrorResponse; status?: number };
+        const url = typeof args === 'string' ? args : args.url;
+        const isExpectedSessionMiss = url === '/auth/session' && status === 401;
+
+        if (data?.message && !isExpectedSessionMiss) {
             const message = data.message
             notifications.show({
                 color: 'red',

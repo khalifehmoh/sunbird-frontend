@@ -8,8 +8,8 @@ import {
   UnstyledButton,
 } from '@mantine/core'
 import { LogOut, Settings } from 'lucide-react'
-import { useAppDispatch, useAppSelector } from '../../redux/store'
-import { authSlice } from '../../redux/features/auth/authSlice'
+import { useAppSelector } from '../../redux/store'
+import { useLogoutUserMutation } from '../../redux/features/auth/authService'
 import classes from './NavbarUserFooter.module.css'
 
 export interface NavbarUserFooterProps {
@@ -18,13 +18,13 @@ export interface NavbarUserFooterProps {
 }
 
 export function NavbarUserFooter({ settingsHref = '/settings' }: NavbarUserFooterProps) {
-  const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const [logoutUser] = useLogoutUserMutation()
   const username = useAppSelector((s) => s.auth.username)
   const email = useAppSelector((s) => s.auth.email)
 
-  const handleLogout = () => {
-    dispatch(authSlice.actions.logout())
+  const handleLogout = async () => {
+    await logoutUser()
     navigate('/auth/login', { replace: true })
   }
 

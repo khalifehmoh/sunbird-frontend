@@ -1,44 +1,34 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { AuthState } from './authTypes';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import type { AuthState, SetUserPayload } from './authTypes'
 
 const initialState: AuthState = {
-  accessToken: '',
-  refreshToken: '',
-  tokenType: '',
-  accessTokenExpiresIn: 0,
-  refreshTokenExpiresIn: 0,
+  isAuthenticated: false,
   username: '',
   email: '',
-  role: ''
-};
+  role: '',
+  tenantId: null,
+  requirePasswordChange: false,
+  mfaEnabled: false,
+}
 
 export const authSlice = createSlice({
-    name: 'auth',
-    initialState,
-    reducers: {
-        setUser: (state, action: PayloadAction<AuthState>) => {
-            state.accessToken = action.payload.accessToken;
-            state.refreshToken = action.payload.refreshToken;
-            state.tokenType = action.payload.tokenType;
-            state.accessTokenExpiresIn = action.payload.accessTokenExpiresIn;
-            state.refreshTokenExpiresIn = action.payload.refreshTokenExpiresIn;
-            state.username = action.payload.username;
-            state.email = action.payload.email;
-            state.role = action.payload.role;
-        },
-        logout: (state) => {
-            state.accessToken = '';
-            state.refreshToken = '';
-            state.tokenType = '';
-            state.accessTokenExpiresIn = 0;
-            state.refreshTokenExpiresIn = 0;
-            state.username = '';
-            state.email = '';
-            state.role = '';
-        }
-    }
-});
+  name: 'auth',
+  initialState,
+  reducers: {
+    setUser: (state, action: PayloadAction<SetUserPayload>) => {
+      const { username, email, role, tenantId, requirePasswordChange, mfaEnabled } = action.payload
+      state.isAuthenticated = true
+      state.username = username
+      state.email = email
+      state.role = role
+      state.tenantId = tenantId ?? null
+      state.requirePasswordChange = requirePasswordChange ?? false
+      state.mfaEnabled = mfaEnabled ?? false
+    },
+    logout: () => initialState,
+  },
+})
 
-export default authSlice.reducer;
+export default authSlice.reducer
 
-export const { setUser } = authSlice.actions;
+export const { setUser, logout } = authSlice.actions

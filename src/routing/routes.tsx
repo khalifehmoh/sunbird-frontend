@@ -8,6 +8,7 @@ import { TenantListPage } from '../pages/admin/TenantManagement/TenantListPage/T
 import { BranchListPage } from '../pages/admin/BranchManagement/BranchListPage/BranchListPage'
 import { LoginPage } from '../pages/LoginPage/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage/RegisterPage'
+import { ChangePasswordPage } from '../pages/ChangePasswordPage/ChangePasswordPage'
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage/ForgotPasswordPage'
 import { ProtectedRoutes } from './protectedRoutes'
 import { PublicRoutes } from './publicRoutes'
@@ -17,10 +18,15 @@ export const router = createBrowserRouter([
     element: <ProtectedRoutes />,
     children: [
       {
+        path: '/change-password',
+        element: <ChangePasswordPage forced />,
+      },
+      {
         path: '/',
         element: <RootLayout />,
         children: [
           { index: true, element: <HomePage /> },
+          { path: 'security/password', element: <ChangePasswordPage /> },
           { path: '*', element: <Navigate to="/" replace /> }
         ]
       },

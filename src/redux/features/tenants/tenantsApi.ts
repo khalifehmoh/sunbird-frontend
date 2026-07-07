@@ -16,6 +16,27 @@ import type {
   CreateTenantRequest,
 } from './tenantsTypes'
 
+function toTenantsPageResponse(
+  response: TenantListItem[] | TenantsPageResponse,
+  args: GetTenantsArgs,
+): TenantsPageResponse {
+  if (!Array.isArray(response)) {
+    return response
+  }
+
+  const totalElements = response.length
+  const totalPages = Math.max(1, Math.ceil(totalElements / args.size))
+  const start = args.page * args.size
+
+  return {
+    content: response.slice(start, start + args.size),
+    totalElements,
+    totalPages,
+    page: args.page,
+    size: args.size,
+  }
+}
+
 export const tenantsApi = createApi({
   reducerPath: 'tenantsApi',
   baseQuery: coreBaseQuery,
@@ -33,6 +54,11 @@ export const tenantsApi = createApi({
         const q = params.toString()
         return `/tenants${q ? `?${q}` : ''}`
       },
+      transformResponse: (response, _meta, arg) =>
+        toTenantsPageResponse(
+          response as TenantListItem[] | TenantsPageResponse,
+          arg,
+        ),
       providesTags: [{ type: 'TenantList', id: 'LIST' }],
     }),
     getTenant: builder.query<TenantListItem, string>({

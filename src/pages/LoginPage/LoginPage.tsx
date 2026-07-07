@@ -43,7 +43,11 @@ export function LoginPage() {
         message: `Welcome back, ${result.data?.username}!`,
         color: 'green',
       });
-      navigate('/dashboard');
+      if (result.data?.requirePasswordChange) {
+        navigate('/change-password');
+      } else {
+        navigate('/');
+      }
     }
   }
 

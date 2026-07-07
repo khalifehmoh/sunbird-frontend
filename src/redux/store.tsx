@@ -11,7 +11,7 @@ import { branchesApi } from './features/branches/branchesApi';
 const authPersistConfig = {
   key: 'auth',
   storage,
-  whitelist: ['accessToken', 'refreshToken', 'tokenType', 'accessTokenExpiresIn', 'refreshTokenExpiresIn', 'username', 'email', 'role'],
+  whitelist: ['username', 'email', 'role', 'tenantId', 'requirePasswordChange', 'mfaEnabled'],
 };
 
 const rootReducer = combineReducers({
