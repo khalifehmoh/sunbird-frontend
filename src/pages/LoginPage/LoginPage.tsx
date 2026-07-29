@@ -57,7 +57,7 @@ export function LoginPage() {
     <div className={classes.wrapper}>
       <Paper className={classes.form} shadow="sm">
         <Group justify="center" mb="md">
-          <BrandLogo size="lg" />
+          <BrandLogo size="xl" />
         </Group>
         <Title order={2} className={classes.title}>
           Welcome back!

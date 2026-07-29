@@ -60,13 +60,13 @@ export function AdminLayout() {
 
   return (
     <AppShell
-      header={{ height: 56 }}
+      header={{ height: 64 }}
       navbar={{ width: 260, breakpoint: 'sm' }}
     >
       <AppShell.Header>
         <Group h="100%" justify="space-between" px="md">
           <Group gap="xs">
-            <BrandLogo to="/admin" size="sm" />
+            <BrandLogo to="/admin" size="lg" />
             <Badge variant="light" color="blue" size="xs" tt="uppercase">
               Admin
             </Badge>

@@ -5,7 +5,7 @@ export interface BrandLogoProps {
   /** Destination when the logo is clicked. Omit to render a non-link mark. */
   to?: string
   /** Visual size preset */
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   /** Force light or dark logo asset. Defaults to current color scheme. */
   variant?: 'auto' | 'light' | 'dark'
   alt?: string
@@ -15,6 +15,7 @@ const heights: Record<NonNullable<BrandLogoProps['size']>, number> = {
   sm: 28,
   md: 36,
   lg: 56,
+  xl: 72,
 }
 
 export function BrandLogo({
@@ -28,8 +29,8 @@ export function BrandLogo({
     variant === 'dark' || (variant === 'auto' && colorScheme === 'dark')
 
   const src = useDarkAsset
-    ? '/sunbird-logo-header-dark.png'
-    : '/sunbird-logo-header.png'
+    ? '/sunbird-logo-dark.png'
+    : '/sunbird-logo.png'
 
   const image = (
     <Image

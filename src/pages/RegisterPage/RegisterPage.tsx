@@ -76,7 +76,7 @@ export function RegisterPage() {
         <Box maw={400} w="100%">
           <Paper p="xl" radius="md" withBorder>
             <Group justify="center" mb="md">
-              <BrandLogo size="md" />
+              <BrandLogo size="lg" />
             </Group>
             <Title order={2} mb="xs">
               Sign up

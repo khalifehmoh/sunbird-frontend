@@ -74,7 +74,7 @@ export function RootLayout() {
     >
       <AppShell.Header>
         <Group h="100%" justify="space-between" px="md">
-          <BrandLogo to="/" size="sm" />
+          <BrandLogo to="/" size="md" />
           <ThemeToggle />
         </Group>
       </AppShell.Header>
