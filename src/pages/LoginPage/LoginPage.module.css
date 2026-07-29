@@ -1,5 +1,5 @@
 .wrapper {
-  min-height: calc(100vh - 56px);
+  min-height: 100vh;
   display: flex;
   flex-direction: row;
 
@@ -28,7 +28,8 @@
     min-width: 0;
     background-size: cover;
     background-position: center;
-    background-image: url(https://images.unsplash.com/photo-1484242857719-4b9144542727?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1280&q=80);
+    background-image: url(/sunbird-lis-login-hero-v2.png);
+    filter: brightness(0.75);
   }
 
   @media (--bp-max-xs) {
