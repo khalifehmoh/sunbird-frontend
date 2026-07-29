@@ -8,11 +8,13 @@ import {
   TextInput,
   Title,
   Stack,
+  Group,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 import classes from './LoginPage.module.css'
+import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { useLoginUserMutation } from '../../redux/features/auth/authService'
 import { notifications } from '@mantine/notifications'
 import { useFormMutation } from '../../hooks/useFormMutation'
@@ -54,8 +56,11 @@ export function LoginPage() {
   return (
     <div className={classes.wrapper}>
       <Paper className={classes.form} shadow="sm">
+        <Group justify="center" mb="md">
+          <BrandLogo size="lg" />
+        </Group>
         <Title order={2} className={classes.title}>
-          Welcome back to Sunbird!
+          Welcome back!
         </Title>
 
         <form onSubmit={form.onSubmit(handleSubmit)}>

@@ -1,12 +1,9 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import {
-  Anchor,
   AppShell,
   Badge,
   Group,
   ScrollArea,
-  Text,
-  Title,
 } from '@mantine/core'
 import {
   LayoutDashboard,
@@ -18,6 +15,7 @@ import {
   Layers,
   KeyRound,
 } from 'lucide-react'
+import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { NavbarLinksGroup } from '../../components/NavbarLinksGroup/NavbarLinksGroup'
 import { NavbarUserFooter } from '../../components/NavbarUserFooter/NavbarUserFooter'
@@ -68,9 +66,7 @@ export function AdminLayout() {
       <AppShell.Header>
         <Group h="100%" justify="space-between" px="md">
           <Group gap="xs">
-            <Anchor component={Link} to="/admin" underline="never" c="inherit">
-              <Title order={4}>Sunbird</Title>
-            </Anchor>
+            <BrandLogo to="/admin" size="sm" />
             <Badge variant="light" color="blue" size="xs" tt="uppercase">
               Admin
             </Badge>
