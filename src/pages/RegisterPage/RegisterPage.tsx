@@ -11,11 +11,13 @@ import {
   Stack,
   Anchor,
   Divider,
+  Group,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
 import classes from './RegisterPage.module.css'
+import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { useRegisterUserMutation } from '../../redux/features/auth/authService'
 import { notifications } from '@mantine/notifications'
 import { useFormMutation } from '../../hooks/useFormMutation'
@@ -73,6 +75,9 @@ export function RegisterPage() {
       <div className={classes.content}>
         <Box maw={400} w="100%">
           <Paper p="xl" radius="md" withBorder>
+            <Group justify="center" mb="md">
+              <BrandLogo size="md" />
+            </Group>
             <Title order={2} mb="xs">
               Sign up
             </Title>

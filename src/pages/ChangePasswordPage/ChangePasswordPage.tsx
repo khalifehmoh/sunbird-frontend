@@ -3,6 +3,7 @@ import {
   Anchor,
   Box,
   Button,
+  Group,
   List,
   Paper,
   PasswordInput,
@@ -10,6 +11,7 @@ import {
   Text,
   Title,
 } from '@mantine/core'
+import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { useForm } from '@mantine/form'
 import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { notifications } from '@mantine/notifications'
@@ -135,6 +137,9 @@ export function ChangePasswordPage({ forced = false }: ChangePasswordPageProps) 
     return (
       <div className={`${classes.wrapper} ${classes.forced}`}>
         <Paper className={classes.form} shadow="sm">
+          <Group justify="center" mb="md">
+            <BrandLogo size="lg" />
+          </Group>
           <Title order={2} className={classes.title}>
             Change your password
           </Title>

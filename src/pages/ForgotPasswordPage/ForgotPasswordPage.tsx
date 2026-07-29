@@ -1,9 +1,10 @@
 
 import { Link } from 'react-router-dom'
-import { Center, Box, Paper, Title, Text, TextInput, Button, Stack, Anchor } from '@mantine/core'
+import { Center, Box, Paper, Title, Text, TextInput, Button, Stack, Anchor, Group } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { zod4Resolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
+import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 
 const forgotSchema = z.object({
   email: z.email('Invalid email'),
@@ -27,6 +28,9 @@ export function ForgotPasswordPage() {
     <Center mih="calc(100vh - 56px)" p="md">
       <Box maw={400} w="100%">
         <Paper p="xl" radius="md" withBorder>
+          <Group justify="center" mb="md">
+            <BrandLogo size="md" />
+          </Group>
           <Title order={2} mb="xs">
             Forgot password
           </Title>

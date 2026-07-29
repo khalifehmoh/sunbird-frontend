@@ -1,10 +1,8 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import {
-  Anchor,
   AppShell,
   Group,
   ScrollArea,
-  Title,
 } from '@mantine/core'
 import {
   BarChart3,
@@ -15,6 +13,7 @@ import {
   Settings,
   Shield,
 } from 'lucide-react'
+import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { NavbarLinksGroup } from '../../components/NavbarLinksGroup/NavbarLinksGroup'
 import { NavbarUserFooter } from '../../components/NavbarUserFooter/NavbarUserFooter'
@@ -75,9 +74,7 @@ export function RootLayout() {
     >
       <AppShell.Header>
         <Group h="100%" justify="space-between" px="md">
-          <Anchor component={Link} to="/" underline="never" c="inherit">
-            <Title order={4}>Sunbird</Title>
-          </Anchor>
+          <BrandLogo to="/" size="sm" />
           <ThemeToggle />
         </Group>
       </AppShell.Header>
