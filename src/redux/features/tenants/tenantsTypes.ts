@@ -1,3 +1,5 @@
+import type { PagedQuery, PagedResponse } from '../../../lib/paging'
+
 export type OrganizationType =
   | 'HOSPITAL'
   | 'NETWORK'
@@ -21,21 +23,9 @@ export interface TenantListItem {
   updatedAt: string | null
 }
 
-export interface TenantsPageResponse {
-  content: TenantListItem[]
-  totalElements: number
-  totalPages: number
-  page: number
-  size: number
-}
-
-export interface GetTenantsArgs {
-  page: number
-  size: number
-  search: string
+export interface GetTenantsArgs extends PagedQuery {
   status: TenantStatus | ''
   type: OrganizationType | ''
-  sort?: string
 }
 
 export interface CreateTenantRequest {
@@ -48,3 +38,27 @@ export interface CreateTenantRequest {
   status?: TenantStatus | null
   maxUsers: number
 }
+
+export interface TenantConfigItem {
+  configKey: string
+  configValue: unknown
+  isEncrypted: boolean
+  updatedAt: string | null
+  updatedBy: string | null
+}
+
+export interface TenantAuditEvent {
+  id: string
+  createdAt: string
+  username: string | null
+  actionType: string
+  entityType: string
+  entityName: string
+  success: boolean
+  ipAddress?: string | null
+}
+
+export type TenantAuditResponse = Pick<
+  PagedResponse<TenantAuditEvent>,
+  'content' | 'totalElements'
+>

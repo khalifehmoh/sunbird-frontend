@@ -8,82 +8,75 @@ import {
   SimpleGrid,
   Skeleton,
   Stack,
-  Switch,
+  Textarea,
   TextInput,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notify } from '../../../../lib/notify'
 import {
-  useCreateBranchMutation,
-  useGetBranchQuery,
-  useUpdateBranchMutation,
-} from '../../../../redux/features/branches/branchesApi'
+  useCreateGroupMutation,
+  useGetGroupQuery,
+  useUpdateGroupMutation,
+} from '../../../../redux/features/groups/groupsApi'
 import type {
-  BranchStatus,
-  BranchType,
-  CreateBranchRequest,
-} from '../../../../redux/features/branches/branchesTypes'
+  CreateGroupRequest,
+  GroupStatus,
+} from '../../../../redux/features/groups/groupsTypes'
 import {
   useGetTenantQuery,
   useGetTenantsQuery,
 } from '../../../../redux/features/tenants/tenantsApi'
+import { isPlatformAdmin } from '../../../../hooks/useAuth'
 import { usePermissions } from '../../../../hooks/usePermissions'
 import { useAppSelector } from '../../../../redux/store'
-import {
-  BRANCH_STATUS_OPTIONS,
-  BRANCH_TYPE_OPTIONS,
-} from '../branchConstants'
+import { GROUP_STATUS_OPTIONS } from '../groupConstants'
 
-interface BranchFormProps {
+interface GroupFormProps {
   opened: boolean
   onClose: () => void
-  branchId?: string
+  groupId?: string
   defaultTenantId?: string
 }
 
 interface FormValues {
   tenantId: string
-  branchCode: string
-  branchName: string
-  branchNameAr: string
-  branchType: BranchType
-  isHeadquarters: boolean
-  city: string
-  status: BranchStatus
+  groupCode: string
+  groupName: string
+  groupNameAr: string
+  groupDescription: string
+  status: GroupStatus
 }
 
 const INITIAL_VALUES: FormValues = {
   tenantId: '',
-  branchCode: '',
-  branchName: '',
-  branchNameAr: '',
-  branchType: 'MAIN',
-  isHeadquarters: false,
-  city: '',
+  groupCode: '',
+  groupName: '',
+  groupNameAr: '',
+  groupDescription: '',
   status: 'ACTIVE',
 }
 
-export function BranchForm({
+export function GroupForm({
   opened,
   onClose,
-  branchId,
+  groupId,
   defaultTenantId,
-}: BranchFormProps) {
-  const isEdit = Boolean(branchId)
+}: GroupFormProps) {
+  const isEdit = Boolean(groupId)
   const { role, tenantId: currentTenantId } = useAppSelector(
     (state) => state.auth,
   )
-  const isSuperAdmin = role === 'ADMIN'
-  const canCreate = usePermissions('BRANCH:CREATE')
-  const canUpdate = usePermissions('BRANCH:UPDATE')
+  const isSuperAdmin = isPlatformAdmin(role)
+  const canCreate = usePermissions('GROUP:CREATE')
+  const canUpdate = usePermissions('GROUP:UPDATE')
   const canUseForm = isEdit ? canUpdate : canCreate
   const contextualTenantId = defaultTenantId ?? currentTenantId ?? ''
 
   const {
     data: existing,
-    isLoading: branchLoading,
-    isError: branchError,
-  } = useGetBranchQuery(branchId ?? '', {
+    isLoading: groupLoading,
+    isError: groupError,
+  } = useGetGroupQuery(groupId ?? '', {
     skip: !opened || !isEdit || !canUseForm,
   })
 
@@ -104,10 +97,8 @@ export function BranchForm({
     skip: !opened || !tenantForReadOnlyId || isSuperAdmin,
   })
 
-  const [createBranch, { isLoading: isCreating }] =
-    useCreateBranchMutation()
-  const [updateBranch, { isLoading: isUpdating }] =
-    useUpdateBranchMutation()
+  const [createGroup, { isLoading: isCreating }] = useCreateGroupMutation()
+  const [updateGroup, { isLoading: isUpdating }] = useUpdateGroupMutation()
   const isSubmitting = isCreating || isUpdating
 
   const form = useForm<FormValues>({
@@ -117,15 +108,14 @@ export function BranchForm({
     },
     validate: {
       tenantId: (value) => (value.trim() ? null : 'Tenant is required'),
-      branchCode: (value) => {
-        if (!value.trim()) return 'Branch code is required'
+      groupCode: (value) => {
+        if (!value.trim()) return 'Group code is required'
         return /^[A-Z0-9][A-Z0-9_-]*$/.test(value)
           ? null
           : 'Use uppercase letters, numbers, hyphens, or underscores'
       },
-      branchName: (value) =>
-        value.trim() ? null : 'Branch name is required',
-      branchType: (value) => (value ? null : 'Branch type is required'),
+      groupName: (value) =>
+        value.trim() ? null : 'Group name is required',
     },
   })
 
@@ -141,7 +131,6 @@ export function BranchForm({
     if (!isEdit) {
       form.setFieldValue('tenantId', contextualTenantId)
     }
-    // Mantine form is stable for this component's lifetime.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opened, isEdit, contextualTenantId])
 
@@ -149,48 +138,43 @@ export function BranchForm({
     if (!opened || !isEdit || !existing) return
     form.setValues({
       tenantId: existing.tenantId,
-      branchCode: existing.branchCode,
-      branchName: existing.branchName,
-      branchNameAr: existing.branchNameAr ?? '',
-      branchType: existing.branchType,
-      isHeadquarters: existing.isHeadquarters,
-      city: existing.city ?? '',
-      status: existing.status,
+      groupCode: existing.groupCode,
+      groupName: existing.groupName,
+      groupNameAr: existing.groupNameAr ?? '',
+      groupDescription: existing.groupDescription ?? '',
+      status: existing.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
     })
     form.resetDirty()
-    // Mantine form is stable for this component's lifetime.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opened, isEdit, existing])
 
   async function handleSubmit(values: FormValues) {
-    const request: CreateBranchRequest = {
-      branchId: isEdit ? branchId : undefined,
+    const request: CreateGroupRequest = {
+      groupId: isEdit ? groupId : undefined,
       tenantId: values.tenantId,
-      branchCode: values.branchCode.trim().toUpperCase(),
-      branchName: values.branchName.trim(),
-      branchNameAr: values.branchNameAr.trim(),
-      branchType: values.branchType,
-      isHeadquarters: values.isHeadquarters,
-      city: values.city.trim(),
-      status: isEdit ? values.status : 'ACTIVE',
+      groupCode: values.groupCode.trim().toUpperCase(),
+      groupName: values.groupName.trim(),
+      groupNameAr: values.groupNameAr.trim() || undefined,
+      groupDescription: values.groupDescription.trim() || undefined,
+      status: values.status,
     }
 
     try {
       if (isEdit) {
-        await updateBranch(request).unwrap()
+        await updateGroup(request).unwrap()
       } else {
-        await createBranch(request).unwrap()
+        await createGroup(request).unwrap()
       }
       notify({
         type: 'success',
-        title: isEdit ? 'Branch updated' : 'Branch created',
-        message: `${values.branchName} was ${
+        title: isEdit ? 'Group updated' : 'Group created',
+        message: `${values.groupName} was ${
           isEdit ? 'updated' : 'created'
         } successfully.`,
       })
       onClose()
     } catch {
-      // The shared base query displays the backend validation message.
+      // Shared base query shows API errors.
     }
   }
 
@@ -198,8 +182,8 @@ export function BranchForm({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={isEdit ? 'Edit branch' : 'Create branch'}
-      size="xl"
+      title={isEdit ? 'Edit group' : 'Create group'}
+      size="lg"
       centered
       closeOnClickOutside={!isSubmitting}
       closeOnEscape={!isSubmitting}
@@ -207,13 +191,13 @@ export function BranchForm({
       {!canUseForm ? (
         <Alert color="red" title="Permission required">
           You don&apos;t have permission to {isEdit ? 'update' : 'create'} a
-          branch.
+          group.
         </Alert>
-      ) : branchError ? (
-        <Alert color="red" title="Branch not found">
-          The branch could not be loaded.
+      ) : groupError ? (
+        <Alert color="red" title="Group not found">
+          The group could not be loaded.
         </Alert>
-      ) : branchLoading ? (
+      ) : groupLoading ? (
         <Stack>
           <Skeleton height={58} />
           <Skeleton height={58} />
@@ -222,12 +206,12 @@ export function BranchForm({
       ) : (
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack gap="lg">
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" verticalSpacing="md">
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
               {isSuperAdmin ? (
                 <Select
                   label="Tenant"
                   placeholder="Select tenant"
-                  description="The organization that owns this branch"
+                  description="The organization that owns this group"
                   data={(tenants?.content ?? []).map((tenant) => ({
                     value: tenant.tenantId ?? '',
                     label: `${tenant.tenantName ?? tenant.tenantCode} (${tenant.tenantCode})`,
@@ -251,74 +235,49 @@ export function BranchForm({
               )}
 
               <TextInput
-                label="Branch code"
-                placeholder="e.g. RIYADH-HQ"
+                label="Group code"
+                placeholder="e.g. NURSES"
                 description="Unique within the tenant; cannot change after creation"
                 required
                 disabled={isEdit}
-                {...form.getInputProps('branchCode')}
+                {...form.getInputProps('groupCode')}
                 onChange={(event) =>
                   form.setFieldValue(
-                    'branchCode',
+                    'groupCode',
                     event.currentTarget.value.toUpperCase(),
                   )
                 }
               />
 
               <TextInput
-                label="Branch name (EN)"
-                placeholder="English branch name"
-                description=" "
+                label="Group name (EN)"
+                placeholder="English group name"
                 required
-                {...form.getInputProps('branchName')}
+                {...form.getInputProps('groupName')}
               />
 
               <TextInput
-                label="Branch name (AR)"
-                placeholder="اسم الفرع بالعربية"
-                description=" "
+                label="Group name (AR)"
+                placeholder="اسم المجموعة بالعربية"
                 dir="rtl"
-                {...form.getInputProps('branchNameAr')}
+                {...form.getInputProps('groupNameAr')}
               />
 
               <Select
-                label="Branch type"
-                data={BRANCH_TYPE_OPTIONS}
-                description=" "
+                label="Status"
+                data={GROUP_STATUS_OPTIONS}
                 required
                 allowDeselect={false}
-                {...form.getInputProps('branchType')}
+                {...form.getInputProps('status')}
               />
-
-              <TextInput
-                label="City"
-                placeholder="City"
-                description=" "
-                {...form.getInputProps('city')}
-              />
-
-              {isEdit ? (
-                <Select
-                  label="Status"
-                  data={BRANCH_STATUS_OPTIONS}
-                  description=" "
-                  required
-                  allowDeselect={false}
-                  {...form.getInputProps('status')}
-                />
-              ) : null}
             </SimpleGrid>
 
-            <Switch
-              label="Headquarters branch"
-              description="Only one branch per tenant can be designated as headquarters"
-              checked={form.values.isHeadquarters}
-              onChange={(event) =>
-                form.setFieldValue(
-                  'isHeadquarters',
-                  event.currentTarget.checked,
-                )
-              }
+            <Textarea
+              label="Description"
+              placeholder="Optional description"
+              minRows={3}
+              autosize
+              {...form.getInputProps('groupDescription')}
             />
 
             <Group justify="flex-end">
@@ -330,7 +289,7 @@ export function BranchForm({
                 Cancel
               </Button>
               <Button type="submit" loading={isSubmitting}>
-                {isEdit ? 'Save changes' : 'Create branch'}
+                {isEdit ? 'Save changes' : 'Create group'}
               </Button>
             </Group>
           </Stack>

@@ -10,7 +10,7 @@ import {
   TextInput,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
-import { notifications } from '@mantine/notifications'
+import { notify } from '../../../../lib/notify'
 import {
   useCreateTenantMutation,
   useGetTenantQuery,
@@ -43,14 +43,14 @@ const INITIAL_VALUES: FormValues = {
   organizationType: 'CLINIC',
   licenseNumber: '',
   maxUsers: 50,
-  status: 'PENDING',
+  status: 'ACTIVE',
 }
 
 export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
   const isEdit = Boolean(tenantId)
 
   const { data: existing, isFetching } = useGetTenantQuery(tenantId!, {
-    skip: !tenantId,
+    skip: !opened || !tenantId,
   })
 
   const [createTenantMutation, { isLoading: isCreating }] = useCreateTenantMutation()
@@ -71,7 +71,12 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
   const updateTenant = useFormMutation(updateTenantMutation, form)
 
   useEffect(() => {
-    if (existing) {
+    if (!opened) {
+      form.reset()
+      return
+    }
+
+    if (isEdit && existing) {
       form.setValues({
         tenantCode: existing.tenantCode,
         tenantName: existing.tenantName ?? '',
@@ -79,15 +84,16 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
         organizationType: existing.organizationType,
         licenseNumber: existing.licenseNumber ?? '',
         maxUsers: existing.maxUsers,
+        status: existing.status,
       })
+      return
+    }
+
+    if (!isEdit) {
+      form.reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existing])
-
-  useEffect(() => {
-    if (!opened) form.reset()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened])
+  }, [opened, isEdit, existing])
 
   async function handleSubmit(values: FormValues) {
     const base: CreateTenantRequest = {
@@ -97,11 +103,11 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
 
     const result = isEdit
       ? await updateTenant({ ...base, status: existing?.status ?? 'ACTIVE' })
-      : await createTenant({ ...base, status: 'PENDING' })
+      : await createTenant({ ...base, status: 'ACTIVE' })
 
     if (!result.error) {
-      notifications.show({
-        color: 'teal',
+      notify({
+        type: 'success',
         title: isEdit ? 'Tenant updated' : 'Tenant created',
         message: `${values.tenantName} has been ${isEdit ? 'updated' : 'created'} successfully.`,
         autoClose: 4000,
@@ -121,7 +127,7 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
-          <SimpleGrid cols={2} spacing="md">
+          <SimpleGrid cols={2} spacing="md" verticalSpacing="md">
             <TextInput
               label="Tenant Code"
               placeholder="e.g. HOSP01"
@@ -136,6 +142,7 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
 
             <NumberInput
               label="Max Users"
+              placeholder="Seat limit"
               description="Seat limit for this tenant"
               min={1}
               required
@@ -146,6 +153,7 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
             <TextInput
               label="Organization Name (EN)"
               placeholder="Full English name"
+              description=" "
               required
               disabled={isFetching}
               {...form.getInputProps('tenantName')}
@@ -154,6 +162,7 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
             <TextInput
               label="Organization Name (AR)"
               placeholder="الاسم بالعربية"
+              description=" "
               dir="rtl"
               disabled={isFetching}
               {...form.getInputProps('tenantNameAr')}
@@ -162,6 +171,7 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
             <Select
               label="Organization Type"
               data={ORG_TYPE_OPTIONS}
+              description=" "
               required
               disabled={isFetching}
               {...form.getInputProps('organizationType')}
@@ -170,6 +180,7 @@ export function TenantForm({ opened, onClose, tenantId }: TenantFormProps) {
             <TextInput
               label="License Number"
               placeholder="MOH / MCI license"
+              description=" "
               disabled={isFetching}
               {...form.getInputProps('licenseNumber')}
             />

@@ -1,17 +1,16 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { coreBaseQuery } from '../../baseQuery'
+import type { PagedResponse } from '../../../lib/paging'
 export type {
   BranchType,
   BranchStatus,
   BranchListItem,
-  BranchesPageResponse,
   GetBranchesArgs,
   CreateBranchRequest,
 } from './branchesTypes'
 
 import type {
   BranchListItem,
-  BranchesPageResponse,
   GetBranchesArgs,
   CreateBranchRequest,
 } from './branchesTypes'
@@ -21,7 +20,7 @@ export const branchesApi = createApi({
   baseQuery: coreBaseQuery,
   tagTypes: ['BranchList'],
   endpoints: (builder) => ({
-    getBranches: builder.query<BranchesPageResponse, GetBranchesArgs>({
+    getBranches: builder.query<PagedResponse<BranchListItem>, GetBranchesArgs>({
       query: ({ page, size, search, tenantId, status, type, hqOnly, sort }) => {
         const params = new URLSearchParams()
         params.set('page', String(page))

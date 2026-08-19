@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { BranchForm } from '../BranchForm/BranchForm'
 import {
   ActionIcon,
@@ -20,7 +20,7 @@ import {
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { modals } from '@mantine/modals'
-import { notifications } from '@mantine/notifications'
+import { notify } from '../../../../lib/notify'
 import {
   Pencil,
   Plus,
@@ -35,6 +35,7 @@ import {
   useGetBranchesQuery,
   usePatchBranchStatusMutation,
 } from '../../../../redux/features/branches/branchesApi'
+import { useGetTenantsQuery } from '../../../../redux/features/tenants/tenantsApi'
 import type {
   BranchListItem,
   BranchStatus,
@@ -50,6 +51,7 @@ import { SortTableHeader } from '../../../../components/SortTableHeader/SortTabl
 import { StatusBadge } from '../../../../components/StatusBadge/StatusBadge'
 import { DataTable } from '../../../../components/DataTable/DataTable'
 import { usePermissions } from '../../../../hooks/usePermissions'
+import { useAppSelector } from '../../../../redux/store'
 
 const PAGE_SIZE = 20
 
@@ -73,27 +75,74 @@ const STATUSES: { value: BranchStatus | ''; label: string }[] = [
 ]
 
 export function BranchListPage() {
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const role = useAppSelector((state) => state.auth.role)
+  const isSuperAdmin = role === 'ADMIN'
   const canRead = usePermissions('BRANCH:READ')
   const canCreate = usePermissions('BRANCH:CREATE')
   const canUpdate = usePermissions('BRANCH:UPDATE')
   const canDelete = usePermissions('BRANCH:DELETE')
 
-  const [formOpened, setFormOpened] = useState(false)
-  const [editingBranchId, setEditingBranchId] = useState<string | undefined>()
-
+  const [formOpened, setFormOpened] = useState(
+    searchParams.get('create') === 'true' || Boolean(searchParams.get('edit')),
+  )
+  const [editingBranchId, setEditingBranchId] = useState<string | undefined>(
+    searchParams.get('edit') ?? undefined,
+  )
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [debouncedSearch] = useDebouncedValue(search, 300)
   const [filterType, setFilterType] = useState<BranchType | ''>('')
   const [filterStatus, setFilterStatus] = useState<BranchStatus | ''>('')
+  const [filterTenant, setFilterTenant] = useState('')
   const [hqOnly, setHqOnly] = useState(false)
   const [sortField, setSortField] = useState<string>('branchCode')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedSearch, filterType, filterStatus, hqOnly])
+  }, [debouncedSearch, filterType, filterStatus, filterTenant, hqOnly])
+
+  useEffect(() => {
+    const editId = searchParams.get('edit') ?? undefined
+    const shouldOpen =
+      searchParams.get('create') === 'true' || Boolean(editId)
+    if (shouldOpen) {
+      setEditingBranchId(editId)
+      setFormOpened(true)
+    }
+  }, [searchParams])
+
+  function openCreateForm() {
+    setEditingBranchId(undefined)
+    setFormOpened(true)
+  }
+
+  function openEditForm(branchId?: string) {
+    if (!branchId) return
+    setEditingBranchId(branchId)
+    setFormOpened(true)
+  }
+
+  function closeForm() {
+    setFormOpened(false)
+    setEditingBranchId(undefined)
+    if (searchParams.has('create') || searchParams.has('edit')) {
+      setSearchParams({}, { replace: true })
+    }
+  }
+
+  const { data: tenants } = useGetTenantsQuery(
+    {
+      page: 0,
+      size: 200,
+      search: '',
+      status: '',
+      type: '',
+      sort: 'tenantName:asc',
+    },
+    { skip: !isSuperAdmin },
+  )
 
   const sortParam = `${SORT_QUERY_KEY[sortField] ?? sortField}:${sortDir}`
 
@@ -102,12 +151,22 @@ export function BranchListPage() {
       page: page - 1,
       size: PAGE_SIZE,
       search: debouncedSearch,
+      tenantId: isSuperAdmin ? filterTenant || undefined : undefined,
       status: filterStatus,
       type: filterType,
       hqOnly,
       sort: sortParam,
     }),
-    [page, debouncedSearch, filterStatus, filterType, hqOnly, sortParam],
+    [
+      page,
+      debouncedSearch,
+      filterStatus,
+      filterType,
+      filterTenant,
+      hqOnly,
+      isSuperAdmin,
+      sortParam,
+    ],
   )
 
   const { data, isLoading, isFetching, isError } = useGetBranchesQuery(
@@ -138,14 +197,21 @@ export function BranchListPage() {
         </Text>
       ),
       labels: { confirm: 'Save', cancel: 'Cancel' },
-      onConfirm: () =>
-        patchStatus({ branchId: row.branchId as string, status }).unwrap().then(() => {
-          notifications.show({
+      onConfirm: async () => {
+        try {
+          await patchStatus({
+            branchId: row.branchId as string,
+            status,
+          }).unwrap()
+          notify({
+            type: 'success',
             title: 'Status updated',
             message: `${row.branchName} is now ${status.toLowerCase()}.`,
-            color: 'green',
           })
-        }),
+        } catch {
+          // The shared base query displays the API error.
+        }
+      },
     })
   }
 
@@ -165,14 +231,18 @@ export function BranchListPage() {
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
-      onConfirm: () =>
-        deleteBranch(row.branchId as string).unwrap().then(() => {
-          notifications.show({
+      onConfirm: async () => {
+        try {
+          await deleteBranch(row.branchId as string).unwrap()
+          notify({
+            type: 'success',
             title: 'Branch deleted',
             message: `${row.branchName} has been deleted successfully.`,
-            color: 'green',
           })
-        }),
+        } catch {
+          // The API explains protected HQ deletion and other failures.
+        }
+      },
     })
   }
 
@@ -201,10 +271,7 @@ export function BranchListPage() {
             {canCreate ? (
               <Button
                 leftSection={<Plus size={18} />}
-                onClick={() => {
-                  setEditingBranchId(undefined)
-                  setFormOpened(true)
-                }}
+                onClick={openCreateForm}
               >
                 Create branch
               </Button>
@@ -230,6 +297,21 @@ export function BranchListPage() {
               clearable
               style={{ flex: '0 1 180px', minWidth: 160 }}
             />
+            {isSuperAdmin ? (
+              <Select
+                label="Tenant"
+                placeholder="All tenants"
+                data={(tenants?.content ?? []).map((tenant) => ({
+                  value: tenant.tenantId ?? '',
+                  label: `${tenant.tenantName ?? tenant.tenantCode} (${tenant.tenantCode})`,
+                }))}
+                value={filterTenant}
+                onChange={(value) => setFilterTenant(value ?? '')}
+                clearable
+                searchable
+                style={{ flex: '0 1 240px', minWidth: 200 }}
+              />
+            ) : null}
             <Select
               label="Status"
               data={STATUSES}
@@ -260,7 +342,7 @@ export function BranchListPage() {
           totalPages={totalPages}
           page={page}
           onPageChange={setPage}
-          colSpan={8}
+          colSpan={isSuperAdmin ? 8 : 7}
           minWidth={960}
           countLabel="branch(es)"
           emptyMessage="No branches match your filters."
@@ -280,13 +362,15 @@ export function BranchListPage() {
               direction={sortDir}
               onSort={handleSort}
             />
-            <SortTableHeader
-              label="Tenant"
-              field="tenantName"
-              activeField={sortField}
-              direction={sortDir}
-              onSort={handleSort}
-            />
+            {isSuperAdmin ? (
+              <SortTableHeader
+                label="Tenant"
+                field="tenantName"
+                activeField={sortField}
+                direction={sortDir}
+                onSort={handleSort}
+              />
+            ) : null}
             <SortTableHeader
               label="Type"
               field="branchType"
@@ -327,8 +411,11 @@ export function BranchListPage() {
             {rows.map((row) => (
               <Table.Tr
                 key={row.branchId}
-                style={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/admin/branches/${row.branchId}`)}
+                style={{
+                  background: row.isHeadquarters
+                    ? 'var(--mantine-color-yellow-light)'
+                    : undefined,
+                }}
               >
                 <Table.Td>
                   <Badge variant="light" color="violet" tt="uppercase">
@@ -347,11 +434,13 @@ export function BranchListPage() {
                     ) : null}
                   </Stack>
                 </Table.Td>
-                <Table.Td>
-                  <Text size="sm" c="dimmed">
-                    {row.tenantName ?? row.tenantId}
-                  </Text>
-                </Table.Td>
+                {isSuperAdmin ? (
+                  <Table.Td>
+                    <Text size="sm" c="dimmed">
+                      {row.tenantName ?? row.tenantId}
+                    </Text>
+                  </Table.Td>
+                ) : null}
                 <Table.Td>
                   <Badge variant="outline" color="gray">
                     {row.branchType}
@@ -395,7 +484,6 @@ export function BranchListPage() {
                 <Table.Td
                   ta="right"
                   style={{ verticalAlign: 'middle' }}
-                  onClick={(e) => e.stopPropagation()}
                 >
                   <Group gap={4} justify="flex-end" wrap="nowrap">
                     {canUpdate ? (
@@ -404,10 +492,7 @@ export function BranchListPage() {
                           variant="subtle"
                           color="gray"
                           aria-label="Edit branch"
-                          onClick={() => {
-                            setEditingBranchId(row.branchId)
-                            setFormOpened(true)
-                          }}
+                          onClick={() => openEditForm(row.branchId)}
                         >
                           <Pencil size={18} />
                         </ActionIcon>
@@ -466,9 +551,13 @@ export function BranchListPage() {
 
       <BranchForm
         opened={formOpened}
-        onClose={() => setFormOpened(false)}
+        onClose={closeForm}
         branchId={editingBranchId}
+        defaultTenantId={
+          (searchParams.get('tenantId') ?? filterTenant) || undefined
+        }
       />
+
     </Box>
   )
 }

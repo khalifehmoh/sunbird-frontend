@@ -1,133 +1,158 @@
-import { notifications } from '@mantine/notifications';
-import { fetchBaseQuery, type BaseQueryApi, type BaseQueryFn, type FetchArgs, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
-import { authSlice } from './features/auth/authSlice';
+import { notify } from '../lib/notify'
 import {
-    MOCK_BRANCHES,
-    MOCK_BRANCHES_PAGE,
-    MOCK_TENANTS,
-    MOCK_TENANTS_PAGE,
-} from './mockData';
+  fetchBaseQuery,
+  type BaseQueryApi,
+  type BaseQueryFn,
+  type FetchArgs,
+  type FetchBaseQueryError,
+} from '@reduxjs/toolkit/query/react'
+import { logout, setUser } from './features/auth/authSlice'
+import type { SessionProfile } from './features/auth/authTypes'
+import { setAuthFlash } from './features/auth/authFlash'
 
 export interface ErrorResponse {
-    message: string;
-    error: string;
-    status: number;
-    timestamp: string;
-    errors?: string[];
+  message: string
+  error: string
+  status: number
+  timestamp: string
+  errors?: string[]
 }
 
 const rawBaseQuery = fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_BASE_URL,
-    credentials: 'include',
-});
+  baseUrl: import.meta.env.VITE_API_BASE_URL,
+  credentials: 'include',
+})
 
-// ---------------------------------------------------------------------------
-// Mock interceptor — active when VITE_USE_MOCK=true in your .env file
-// ---------------------------------------------------------------------------
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+/** Shared in-flight refresh so concurrent 401s only hit /auth/refresh once. */
+let refreshPromise: Promise<boolean> | null = null
 
-// In-memory "database" so create/update/delete/patch work during the session
-let mockBranches = [...MOCK_BRANCHES];
-
-function mockDelay<T>(data: T): Promise<{ data: T }> {
-    return new Promise((resolve) => setTimeout(() => resolve({ data }), 300));
+function requestUrl(args: string | FetchArgs): string {
+  return typeof args === 'string' ? args : args.url
 }
 
-async function mockBaseQuery(args: string | FetchArgs): Promise<{ data: unknown } | { error: FetchBaseQueryError }> {
-    const url = typeof args === 'string' ? args : args.url;
-    const method = typeof args === 'string' ? 'GET' : (args.method ?? 'GET');
-    const body = typeof args === 'object' ? args.body : undefined;
-
-    // --- Tenants ---
-    if (url.startsWith('/tenants')) {
-        const idMatch = url.match(/^\/tenants\/([^/?]+)/)
-        if (idMatch) {
-            const tenant = MOCK_TENANTS.find((t) => t.tenantId === idMatch[1])
-            return tenant ? mockDelay(tenant) : { error: { status: 404, data: { message: 'Tenant not found' } } as FetchBaseQueryError }
-        }
-        return mockDelay(MOCK_TENANTS_PAGE)
-    }
-
-    // --- Branches ---
-    if (url.startsWith('/branches')) {
-        const statusMatch = url.match(/^\/branches\/([^/?]+)\/status$/)
-        const idMatch = url.match(/^\/branches\/([^/?]+)$/)
-
-        // PATCH /branches/:id/status
-        if (statusMatch && method === 'PATCH') {
-            const idx = mockBranches.findIndex((b) => b.branchId === statusMatch[1])
-            if (idx !== -1 && body) {
-                mockBranches[idx] = { ...mockBranches[idx], status: (body as { status: string }).status as 'ACTIVE' | 'INACTIVE' }
-                return mockDelay(mockBranches[idx])
-            }
-            return { error: { status: 404, data: { message: 'Branch not found' } } as FetchBaseQueryError }
-        }
-
-        // GET /branches/:id
-        if (idMatch && method === 'GET') {
-            const branch = mockBranches.find((b) => b.branchId === idMatch[1])
-            return branch ? mockDelay(branch) : { error: { status: 404, data: { message: 'Branch not found' } } as FetchBaseQueryError }
-        }
-
-        // PUT /branches/:id
-        if (idMatch && method === 'PUT') {
-            const idx = mockBranches.findIndex((b) => b.branchId === idMatch[1])
-            if (idx !== -1 && body) {
-                mockBranches[idx] = { ...mockBranches[idx], ...(body as object) }
-                return mockDelay(mockBranches[idx])
-            }
-            return { error: { status: 404, data: { message: 'Branch not found' } } as FetchBaseQueryError }
-        }
-
-        // DELETE /branches/:id
-        if (idMatch && method === 'DELETE') {
-            mockBranches = mockBranches.filter((b) => b.branchId !== idMatch[1])
-            return mockDelay(undefined)
-        }
-
-        // POST /branches
-        if (method === 'POST' && body) {
-            const newBranch = {
-                ...(body as object),
-                branchId: `branch-${Date.now()}`,
-                tenantName: MOCK_TENANTS.find((t) => t.tenantId === (body as { tenantId: string }).tenantId)?.tenantName ?? null,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                status: 'ACTIVE' as const,
-            }
-            mockBranches.push(newBranch as typeof MOCK_BRANCHES[number])
-            return mockDelay(newBranch)
-        }
-
-        // GET /branches (list with basic filtering)
-        const page = { ...MOCK_BRANCHES_PAGE, content: mockBranches, totalElements: mockBranches.length }
-        return mockDelay(page)
-    }
-
-    return { error: { status: 404, data: { message: 'Mock: endpoint not found' } } as FetchBaseQueryError }
+function isAuthBootstrapUrl(url: string): boolean {
+  return (
+    url === '/auth/refresh' ||
+    url === '/auth/login' ||
+    url === '/auth/register' ||
+    url === '/auth/logout'
+  )
 }
 
-export const coreBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api: BaseQueryApi, extraOptions: object) => {
-    if (USE_MOCK) {
-        return mockBaseQuery(args) as ReturnType<typeof coreBaseQuery>
+function buildLoginUrl(includeSessionReason: boolean): string {
+  const returnTo = `${window.location.pathname}${window.location.search}`
+  const params = new URLSearchParams()
+  if (includeSessionReason) {
+    params.set('reason', 'session')
+  }
+  if (returnTo && returnTo !== '/' && !returnTo.startsWith('/auth/')) {
+    params.set('returnTo', returnTo)
+  }
+  const query = params.toString()
+  return `/auth/login${query ? `?${query}` : ''}`
+}
+
+function forceLogin(api: BaseQueryApi) {
+  const wasAuthenticated = Boolean(
+    (api.getState() as { auth?: { isAuthenticated?: boolean } }).auth
+      ?.isAuthenticated,
+  )
+  api.dispatch(logout())
+
+  if (wasAuthenticated) {
+    setAuthFlash({
+      title: 'Session ended',
+      message: 'Please sign in again to continue.',
+      type: 'warning',
+    })
+  }
+
+  if (!window.location.pathname.startsWith('/auth/')) {
+    window.location.assign(buildLoginUrl(wasAuthenticated))
+  }
+}
+
+async function tryRefreshSession(
+  api: BaseQueryApi,
+  extraOptions: object,
+): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const refreshResult = await rawBaseQuery(
+        { url: '/auth/refresh', method: 'POST' },
+        api,
+        extraOptions,
+      )
+
+      if (refreshResult.error || !refreshResult.data) {
+        await rawBaseQuery(
+          { url: '/auth/logout', method: 'POST' },
+          api,
+          extraOptions,
+        )
+        forceLogin(api)
+        return false
+      }
+
+      const profile = refreshResult.data as SessionProfile & {
+        accessTokenExpiresIn?: number
+        refreshTokenExpiresIn?: number
+      }
+      api.dispatch(
+        setUser({
+          username: profile.username,
+          email: profile.email,
+          role: profile.role,
+          tenantId: profile.tenantId,
+          requirePasswordChange: profile.requirePasswordChange,
+          mfaEnabled: profile.mfaEnabled,
+        }),
+      )
+      return true
+    })().finally(() => {
+      refreshPromise = null
+    })
+  }
+
+  return refreshPromise
+}
+
+export const coreBaseQuery: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api: BaseQueryApi, extraOptions: object) => {
+  let result = await rawBaseQuery(args, api, extraOptions)
+  const url = requestUrl(args)
+  const status = result.error?.status
+
+  if (result.error && status === 401 && !isAuthBootstrapUrl(url)) {
+    const refreshed = await tryRefreshSession(api, extraOptions)
+    if (refreshed) {
+      result = await rawBaseQuery(args, api, extraOptions)
+    } else {
+      // Refresh already forced login; suppress duplicate error toasts.
+      return result
     }
+  }
 
-    const result = await rawBaseQuery(args, api, extraOptions);
-
-    if (result.error) {
-        const { data, status } = result.error as { data: ErrorResponse; status?: number };
-        const url = typeof args === 'string' ? args : args.url;
-        const isExpectedSessionMiss = url === '/auth/session' && status === 401;
-
-        if (data?.message && !isExpectedSessionMiss) {
-            const message = data.message
-            notifications.show({
-                color: 'red',
-                title: 'Error',
-                message,
-                autoClose: 5000,
-            });
-        }
+  if (result.error) {
+    const { data, status: errorStatus } = result.error as {
+      data: ErrorResponse
+      status?: number
     }
-    return result;
+    const isExpectedSessionMiss =
+      url === '/auth/session' && errorStatus === 401
+
+    if (data?.message && !isExpectedSessionMiss) {
+      notify({
+        type: 'error',
+        title: 'Error',
+        message: data.message,
+        autoClose: 5000,
+      })
+    }
+  }
+
+  return result
 }

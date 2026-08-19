@@ -14,7 +14,7 @@ import {
 import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { useForm } from '@mantine/form'
 import { zod4Resolver } from 'mantine-form-zod-resolver'
-import { notifications } from '@mantine/notifications'
+import { notify } from '../../lib/notify'
 import {
   changePasswordSchema,
   passwordRequirements,
@@ -63,10 +63,10 @@ export function ChangePasswordPage({ forced = false }: ChangePasswordPageProps) 
     }
 
     if ('data' in result) {
-      notifications.show({
+      notify({
+        type: 'success',
         title: 'Password changed',
         message: 'Please sign in again with your new password.',
-        color: 'green',
       })
       navigate('/auth/login', { replace: true })
     }

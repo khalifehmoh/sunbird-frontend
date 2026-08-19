@@ -19,7 +19,7 @@ import { z } from 'zod'
 import classes from './RegisterPage.module.css'
 import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { useRegisterUserMutation } from '../../redux/features/auth/authService'
-import { notifications } from '@mantine/notifications'
+import { notify } from '../../lib/notify'
 import { useFormMutation } from '../../hooks/useFormMutation'
 
 const registerSchema = z
@@ -61,10 +61,10 @@ export function RegisterPage() {
   const handleSubmit = async (values: RegisterFormValues) => {
     const result = await registerUser(values)
     if ('data' in result) {
-      notifications.show({
+      notify({
+        type: 'success',
         title: 'Account created',
         message: 'Please login to continue',
-        color: 'green',
       })
       navigate('/auth/login')
     }

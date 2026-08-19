@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { coreBaseQuery } from '../../baseQuery'
+import type { PagedResponse } from '../../../lib/paging'
 
 export interface DashboardStats {
   tenantCount: number
@@ -20,12 +21,7 @@ export interface AuditEvent {
   ipAddress?: string
 }
 
-export interface AuditEventsResponse {
-  content: AuditEvent[]
-  totalElements: number
-  totalPages: number
-  page: number
-}
+export type AuditEventsResponse = PagedResponse<AuditEvent>
 
 export const dashboardApi = createApi({
   reducerPath: 'dashboardApi',

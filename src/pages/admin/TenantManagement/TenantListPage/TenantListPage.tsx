@@ -19,7 +19,7 @@ import {
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { modals } from '@mantine/modals'
-import { notifications } from '@mantine/notifications'
+import { notify } from '../../../../lib/notify'
 import {
   Download,
   Eye,
@@ -33,6 +33,7 @@ import dayjs from 'dayjs'
 import {
   useDeleteTenantMutation,
   useGetTenantsQuery,
+  usePatchTenantStatusMutation,
 } from '../../../../redux/features/tenants/tenantsApi'
 import type {
   OrganizationType,
@@ -115,6 +116,7 @@ export function TenantListPage() {
   )
 
   const [deleteTenant] = useDeleteTenantMutation()
+  const [patchStatus] = usePatchTenantStatusMutation()
 
   function handleSort(field: string) {
     if (field === sortField) {
@@ -125,20 +127,32 @@ export function TenantListPage() {
     }
   }
 
-  // const confirmSetStatus = (row: TenantListItem, status: TenantStatus) => {
-  //   if (status === row.status) return
-  //   modals.openConfirmModal({
-  //     title: 'Update tenant status',
-  //     children: (
-  //       <Text size="sm">
-  //         Set <strong>{row.tenantName}</strong> ({row.tenantCode}) to{' '}
-  //         <strong>{status}</strong>?
-  //       </Text>
-  //     ),
-  //     labels: { confirm: 'Save', cancel: 'Cancel' },
-  //     // onConfirm: () => patchStatus({ tenantId: row.tenantId, status }),
-  //   })
-  // }
+  const confirmSetStatus = (row: TenantListItem, status: TenantStatus) => {
+    if (!row.tenantId || status === row.status) return
+    modals.openConfirmModal({
+      title: 'Update tenant status',
+      children: (
+        <Text size="sm">
+          Set <strong>{row.tenantName}</strong> ({row.tenantCode}) to{' '}
+          <strong>{status}</strong>?
+        </Text>
+      ),
+      labels: { confirm: 'Save', cancel: 'Cancel' },
+      confirmProps: { color: status === 'ACTIVE' ? 'teal' : 'orange' },
+      onConfirm: async () => {
+        try {
+          await patchStatus({ tenantId: row.tenantId as string, status }).unwrap()
+          notify({
+            type: 'success',
+            title: 'Status updated',
+            message: `${row.tenantName} is now ${status}.`,
+          })
+        } catch {
+          // The shared base query displays the API error.
+        }
+      },
+    })
+  }
 
   const confirmDelete = (row: TenantListItem) => {
     if (!row.tenantId) return
@@ -152,10 +166,10 @@ export function TenantListPage() {
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
       onConfirm: () => deleteTenant(row.tenantId as string).unwrap().then(() => {
-        notifications.show({
+        notify({
+          type: 'success',
           title: 'Tenant deleted',
           message: `${row.tenantName} has been deleted successfully.`,
-          color: 'green',
         })
       }),
     })
@@ -189,11 +203,11 @@ export function TenantListPage() {
                   variant="light"
                   leftSection={<Download size={18} />}
                   onClick={() =>
-                    notifications.show({
+                    notify({
+                      type: 'info',
                       title: 'Export',
                       message:
                         'Wire GET /tenants/export (or equivalent) to download CSV with the active filters.',
-                      color: 'blue',
                     })
                   }
                 >
@@ -419,6 +433,12 @@ export function TenantListPage() {
                                 <Menu.Item
                                   key={s.value}
                                   disabled={row.status === s.value}
+                                  onClick={() =>
+                                    confirmSetStatus(
+                                      row,
+                                      s.value as TenantStatus,
+                                    )
+                                  }
                                 >
                                   Set {s.label}
                                 </Menu.Item>

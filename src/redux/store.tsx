@@ -7,6 +7,9 @@ import { authApi } from './features/auth/authService';
 import { dashboardApi } from './features/dashboard/dashboardApi';
 import { tenantsApi } from './features/tenants/tenantsApi';
 import { branchesApi } from './features/branches/branchesApi';
+import { usersApi } from './features/users/usersApi';
+import { groupsApi } from './features/groups/groupsApi';
+import { rolesApi } from './features/roles/rolesApi';
 
 const authPersistConfig = {
   key: 'auth',
@@ -20,6 +23,9 @@ const rootReducer = combineReducers({
   [dashboardApi.reducerPath]: dashboardApi.reducer,
   [tenantsApi.reducerPath]: tenantsApi.reducer,
   [branchesApi.reducerPath]: branchesApi.reducer,
+  [usersApi.reducerPath]: usersApi.reducer,
+  [groupsApi.reducerPath]: groupsApi.reducer,
+  [rolesApi.reducerPath]: rolesApi.reducer,
 });
 
 export const store = configureStore({
@@ -29,7 +35,15 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(authApi.middleware, dashboardApi.middleware, tenantsApi.middleware, branchesApi.middleware),
+    }).concat(
+      authApi.middleware,
+      dashboardApi.middleware,
+      tenantsApi.middleware,
+      branchesApi.middleware,
+      usersApi.middleware,
+      groupsApi.middleware,
+      rolesApi.middleware,
+    ),
 })
 
 export const persistor = persistStore(store);

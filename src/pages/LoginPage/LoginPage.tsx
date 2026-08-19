@@ -1,5 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
+  Alert,
   Anchor,
   Button,
   Paper,
@@ -16,8 +18,9 @@ import { z } from 'zod'
 import classes from './LoginPage.module.css'
 import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { useLoginUserMutation } from '../../redux/features/auth/authService'
-import { notifications } from '@mantine/notifications'
 import { useFormMutation } from '../../hooks/useFormMutation'
+import { consumeAuthFlash } from '../../redux/features/auth/authFlash'
+import { notify } from '../../lib/notify'
 
 const loginSchema = z.object({
   username: z.string(),
@@ -29,6 +32,8 @@ type LoginFormValues = z.infer<typeof loginSchema>
 export function LoginPage() {
   const [loginUserMutation] = useLoginUserMutation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sessionEnded = searchParams.get('reason') === 'session'
   const form = useForm<LoginFormValues>({
     mode: 'uncontrolled',
     initialValues: { username: '', password: '' },
@@ -37,18 +42,40 @@ export function LoginPage() {
 
   const loginUser = useFormMutation(loginUserMutation, form)
 
+  useEffect(() => {
+    // Prefer the on-page Alert for session expiry; only toast when we have a
+    // flash without the reason query (avoids Strict Mode double-toasts).
+    const flash = consumeAuthFlash()
+    if (sessionEnded) {
+      return
+    }
+    if (flash) {
+      notify({
+        type: flash.type ?? 'warning',
+        title: flash.title,
+        message: flash.message,
+        autoClose: 8000,
+      })
+    }
+  }, [sessionEnded])
+
   const handleSubmit = async (values: LoginFormValues) => {
-    const result = await loginUser(values);
+    const result = await loginUser(values)
     if ('data' in result) {
-      notifications.show({
+      notify({
+        type: 'success',
         title: 'Login successful',
         message: `Welcome back, ${result.data?.username}!`,
-        color: 'green',
-      });
+      })
       if (result.data?.requirePasswordChange) {
-        navigate('/change-password');
+        navigate('/change-password')
       } else {
-        navigate('/');
+        const returnTo = searchParams.get('returnTo')
+        navigate(
+          returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')
+            ? returnTo
+            : '/',
+        )
       }
     }
   }
@@ -62,6 +89,12 @@ export function LoginPage() {
         <Title order={2} className={classes.title}>
           Welcome back!
         </Title>
+
+        {sessionEnded ? (
+          <Alert color="orange" mb="md" title="Session ended">
+            Please sign in again to continue.
+          </Alert>
+        ) : null}
 
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack gap="md">

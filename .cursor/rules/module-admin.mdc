@@ -1,0 +1,13 @@
+---
+description: When editing admin UI, prefer the admin blueprint for scope
+globs: src/pages/admin/**/*,src/layouts/AdminLayout/**/*
+alwaysApply: false
+---
+
+# Admin module UI
+
+For work under these paths, treat `docs/admin.md` as the product scope source.
+
+- Match routes, page behavior, permissions, and bilingual fields from the cited section.
+- Do not invent pages or API fields not in the blueprint section being implemented.
+- Backend for this product is NestJS, not Spring — when touching API contracts, align with the NestJS service.

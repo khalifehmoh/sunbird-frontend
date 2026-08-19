@@ -71,6 +71,7 @@ const DUMMY_AUDIT_EVENTS: AuditEventsResponse = {
   totalElements: 10,
   totalPages: 1,
   page: 0,
+  size: 10,
 }
 
 const ACTION_COLORS: Record<string, string> = {

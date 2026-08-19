@@ -1,9 +1,26 @@
 ---
-description: Always read the project blueprint before answering
+description: Blueprint index — which MD to read for architecture, routing, and feature scope
 alwaysApply: true
 ---
 
 # Project Blueprint
 
-Always read `docs/admin_blueprint_v3.md` before responding to questions about architecture, routing, or feature scope.
+Before answering questions about architecture, routing, permissions, or feature scope, read the relevant blueprint Markdown (not DOCX).
 
+## Module → file
+
+| Module | File |
+|--------|------|
+| Admin | `docs/admin.md` |
+
+When the module is unclear, ask which module applies. Do **not** load every blueprint by default.
+
+## Stack notes
+
+- Frontend: React (this repo). Prefer existing project patterns over blueprint mentions of Tailwind/Zustand/React Query if the codebase already uses Mantine/Redux Toolkit, etc.
+- Backend APIs: implement in **NestJS** (`sunbird-core-backend-nestjs`), not Java/Spring — even when the blueprint names Spring Boot, JPA, or `@PreAuthorize`.
+
+## Working style
+
+- Prefer `@docs/<module>.md` plus a section reference (e.g. §7.1) in the user prompt.
+- Product behavior in the blueprint wins; framework snippets in the blueprint do not.

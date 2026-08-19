@@ -1,8 +1,16 @@
 import { Center, Loader } from '@mantine/core'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useSearchParams } from 'react-router-dom'
 import { useGetSessionQuery } from '../redux/features/auth/authService'
 
+function safeReturnPath(returnTo: string | null): string {
+  if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) {
+    return returnTo
+  }
+  return '/'
+}
+
 export const PublicRoutes = () => {
+  const [searchParams] = useSearchParams()
   const { isLoading, isSuccess } = useGetSessionQuery()
 
   if (isLoading) {
@@ -13,5 +21,11 @@ export const PublicRoutes = () => {
     )
   }
 
-  return isSuccess ? <Navigate to="/" replace /> : <Outlet />
+  if (isSuccess) {
+    return (
+      <Navigate to={safeReturnPath(searchParams.get('returnTo'))} replace />
+    )
+  }
+
+  return <Outlet />
 }
