@@ -55,3 +55,17 @@ export interface UserSessionItem {
   isActive: boolean
   isRevoked: boolean
 }
+
+export interface ActiveSessionItem extends UserSessionItem {
+  userId: string
+  username: string
+  fullName: string | null
+  tenantId: string | null
+  tenantName: string | null
+}
+
+export interface GetActiveSessionsArgs {
+  page: number
+  size: number
+  search: string
+}

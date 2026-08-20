@@ -535,7 +535,7 @@ export function UserListPage() {
                   </Text>
                 </Table.Td>
                 <Table.Td>
-                  <Badge variant="light" color="gray" tt="none">
+                  <Badge variant="light" color="neutral" tt="none">
                     <Code>{row.username}</Code>
                   </Badge>
                 </Table.Td>

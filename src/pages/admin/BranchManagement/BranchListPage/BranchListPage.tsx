@@ -442,7 +442,7 @@ export function BranchListPage() {
                   </Table.Td>
                 ) : null}
                 <Table.Td>
-                  <Badge variant="outline" color="gray">
+                  <Badge variant="outline" color="neutral">
                     {row.branchType}
                   </Badge>
                 </Table.Td>

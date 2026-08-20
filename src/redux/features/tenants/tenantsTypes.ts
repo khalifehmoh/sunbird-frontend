@@ -1,4 +1,4 @@
-import type { PagedQuery, PagedResponse } from '../../../lib/paging'
+import type { PagedQuery } from '../../../lib/paging'
 
 export type OrganizationType =
   | 'HOSPITAL'
@@ -46,19 +46,3 @@ export interface TenantConfigItem {
   updatedAt: string | null
   updatedBy: string | null
 }
-
-export interface TenantAuditEvent {
-  id: string
-  createdAt: string
-  username: string | null
-  actionType: string
-  entityType: string
-  entityName: string
-  success: boolean
-  ipAddress?: string | null
-}
-
-export type TenantAuditResponse = Pick<
-  PagedResponse<TenantAuditEvent>,
-  'content' | 'totalElements'
->

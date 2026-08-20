@@ -21,28 +21,10 @@ import {
   useTerminateSessionMutation,
 } from '../../../../redux/features/users/usersApi'
 import type { UserSessionItem } from '../../../../redux/features/users/usersTypes'
+import { parseUserAgent, parseOs } from '../../../../utils/userAgent'
 import { usePermissions } from '../../../../hooks/usePermissions'
 
 dayjs.extend(relativeTime)
-
-function parseUserAgent(userAgent: string | null) {
-  if (!userAgent) return 'Unknown'
-  if (/Edg\//.test(userAgent)) return 'Edge'
-  if (/Chrome\//.test(userAgent)) return 'Chrome'
-  if (/Firefox\//.test(userAgent)) return 'Firefox'
-  if (/Safari\//.test(userAgent) && !/Chrome\//.test(userAgent)) return 'Safari'
-  return userAgent.slice(0, 40)
-}
-
-function parseOs(userAgent: string | null) {
-  if (!userAgent) return ''
-  if (/Windows/.test(userAgent)) return 'Windows'
-  if (/Mac OS X|Macintosh/.test(userAgent)) return 'macOS'
-  if (/Android/.test(userAgent)) return 'Android'
-  if (/iPhone|iPad/.test(userAgent)) return 'iOS'
-  if (/Linux/.test(userAgent)) return 'Linux'
-  return ''
-}
 
 interface UserSessionsTableProps {
   userId: string
@@ -219,7 +201,7 @@ export function UserSessionsTable({
                     <Table.Td>
                       <Badge
                         variant="light"
-                        color={session.isActive ? 'teal' : 'gray'}
+                        color={session.isActive ? 'teal' : 'neutral'}
                       >
                         {session.isActive ? 'Active' : 'Expired'}
                       </Badge>

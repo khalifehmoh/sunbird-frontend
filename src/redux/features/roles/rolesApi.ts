@@ -7,7 +7,6 @@ export type {
   GetRolesArgs,
   CreateRoleRequest,
   RolePermissionItem,
-  ModuleItem,
 } from './rolesTypes'
 
 import type {
@@ -15,13 +14,12 @@ import type {
   GetRolesArgs,
   CreateRoleRequest,
   RolePermissionItem,
-  ModuleItem,
 } from './rolesTypes'
 
 export const rolesApi = createApi({
   reducerPath: 'rolesApi',
   baseQuery: coreBaseQuery,
-  tagTypes: ['RoleList', 'Role', 'RolePermissions', 'ModuleList'],
+  tagTypes: ['RoleList', 'Role', 'RolePermissions'],
   endpoints: (builder) => ({
     getRoles: builder.query<PagedResponse<RoleListItem>, GetRolesArgs>({
       query: ({ page, size, search, status, isSystem, sort }) => {
@@ -136,10 +134,6 @@ export const rolesApi = createApi({
               { type: 'RolePermissions', id: roleId },
             ],
     }),
-    getModules: builder.query<ModuleItem[], void>({
-      query: () => '/modules',
-      providesTags: [{ type: 'ModuleList', id: 'LIST' }],
-    }),
   }),
 })
 
@@ -154,5 +148,4 @@ export const {
   useGrantRolePermissionMutation,
   useRevokeRolePermissionMutation,
   useBatchRolePermissionsMutation,
-  useGetModulesQuery,
 } = rolesApi

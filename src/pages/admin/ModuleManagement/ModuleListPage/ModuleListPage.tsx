@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { RoleForm } from '../RoleForm/RoleForm'
+import { ModuleForm } from '../ModuleForm/ModuleForm'
 import {
   ActionIcon,
   Badge,
@@ -19,100 +19,88 @@ import {
 import { useDebouncedValue } from '@mantine/hooks'
 import { modals } from '@mantine/modals'
 import { notify } from '../../../../lib/notify'
-import { KeyRound, Lock, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Lock, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import {
-  useDeleteRoleMutation,
-  useGetRolesQuery,
-} from '../../../../redux/features/roles/rolesApi'
+  useDeleteModuleMutation,
+  useGetModulesQuery,
+} from '../../../../redux/features/modules/modulesApi'
 import type {
-  GetRolesArgs,
-  RoleListItem,
-  RoleStatus,
-} from '../../../../redux/features/roles/rolesTypes'
+  GetModulesArgs,
+  ModuleListItem,
+  ModuleStatus,
+} from '../../../../redux/features/modules/modulesTypes'
 import {
-  ROLE_STATUS_COLORS,
-  ROLE_STATUS_OPTIONS,
-  isRoleLocked,
-  roleLockReason,
-} from '../roleConstants'
+  MODULE_STATUS_COLORS,
+  MODULE_STATUS_OPTIONS,
+  isModuleLocked,
+  moduleLockReason,
+} from '../moduleConstants'
 import { SortTableHeader } from '../../../../components/SortTableHeader/SortTableHeader'
 import { StatusBadge } from '../../../../components/StatusBadge/StatusBadge'
 import { DataTable } from '../../../../components/DataTable/DataTable'
 import { usePermissions } from '../../../../hooks/usePermissions'
-import { isPlatformAdmin } from '../../../../hooks/useAuth'
-import { useAppSelector } from '../../../../redux/store'
 
 const PAGE_SIZE = 20
 
 const SORT_QUERY_KEY: Record<string, string> = {
-  roleCode: 'roleCode',
-  roleName: 'roleName',
+  moduleCode: 'moduleCode',
+  moduleName: 'moduleName',
   status: 'status',
-  tenantName: 'tenantName',
 }
 
-const STATUSES: { value: RoleStatus | ''; label: string }[] = [
+const STATUSES: { value: ModuleStatus | ''; label: string }[] = [
   { value: '', label: 'All statuses' },
-  ...ROLE_STATUS_OPTIONS,
+  ...MODULE_STATUS_OPTIONS,
 ]
 
-const TYPE_FILTERS: { value: '' | 'true' | 'false'; label: string }[] = [
-  { value: '', label: 'All types' },
-  { value: 'true', label: 'System' },
-  { value: 'false', label: 'Custom' },
-]
-
-export function RoleListPage() {
+export function ModuleListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const role = useAppSelector((state) => state.auth.role)
-  const isSuperAdmin = isPlatformAdmin(role)
-  const canRead = usePermissions('ROLE:READ')
-  const canCreate = usePermissions('ROLE:CREATE')
-  const canUpdate = usePermissions('ROLE:UPDATE')
-  const canDelete = usePermissions('ROLE:DELETE')
+  const canRead = usePermissions('MODULE:READ')
+  const canCreate = usePermissions('MODULE:CREATE')
+  const canUpdate = usePermissions('MODULE:UPDATE')
+  const canDelete = usePermissions('MODULE:DELETE')
 
   const [formOpened, setFormOpened] = useState(
     searchParams.get('create') === 'true' || Boolean(searchParams.get('edit')),
   )
-  const [editingRoleId, setEditingRoleId] = useState<string | undefined>(
+  const [editingModuleId, setEditingModuleId] = useState<string | undefined>(
     searchParams.get('edit') ?? undefined,
   )
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [debouncedSearch] = useDebouncedValue(search, 300)
-  const [filterStatus, setFilterStatus] = useState<RoleStatus | ''>('')
-  const [filterType, setFilterType] = useState<'' | 'true' | 'false'>('')
-  const [sortField, setSortField] = useState('roleCode')
+  const [filterStatus, setFilterStatus] = useState<ModuleStatus | ''>('')
+  const [sortField, setSortField] = useState('moduleCode')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedSearch, filterStatus, filterType])
+  }, [debouncedSearch, filterStatus])
 
   useEffect(() => {
     const editId = searchParams.get('edit') ?? undefined
     const shouldOpen =
       searchParams.get('create') === 'true' || Boolean(editId)
     if (shouldOpen) {
-      setEditingRoleId(editId)
+      setEditingModuleId(editId)
       setFormOpened(true)
     }
   }, [searchParams])
 
   function openCreateForm() {
-    setEditingRoleId(undefined)
+    setEditingModuleId(undefined)
     setFormOpened(true)
   }
 
-  function openEditForm(roleId?: string) {
-    if (!roleId) return
-    setEditingRoleId(roleId)
+  function openEditForm(moduleId?: string) {
+    if (!moduleId) return
+    setEditingModuleId(moduleId)
     setFormOpened(true)
   }
 
   function closeForm() {
     setFormOpened(false)
-    setEditingRoleId(undefined)
+    setEditingModuleId(undefined)
     if (searchParams.has('create') || searchParams.has('edit')) {
       setSearchParams({}, { replace: true })
     }
@@ -120,24 +108,23 @@ export function RoleListPage() {
 
   const sortParam = `${SORT_QUERY_KEY[sortField] ?? sortField}:${sortDir}`
 
-  const queryArgs: GetRolesArgs = useMemo(
+  const queryArgs: GetModulesArgs = useMemo(
     () => ({
       page: page - 1,
       size: PAGE_SIZE,
       search: debouncedSearch,
       status: filterStatus,
-      isSystem: filterType === '' ? '' : filterType === 'true',
       sort: sortParam,
     }),
-    [page, debouncedSearch, filterStatus, filterType, sortParam],
+    [page, debouncedSearch, filterStatus, sortParam],
   )
 
-  const { data, isLoading, isFetching, isError } = useGetRolesQuery(
+  const { data, isLoading, isFetching, isError } = useGetModulesQuery(
     queryArgs,
     { skip: !canRead },
   )
 
-  const [deleteRole] = useDeleteRoleMutation()
+  const [deleteModule] = useDeleteModuleMutation()
 
   function handleSort(field: string) {
     if (field === sortField) {
@@ -148,19 +135,16 @@ export function RoleListPage() {
     }
   }
 
-  const confirmDelete = (row: RoleListItem) => {
+  const confirmDelete = (row: ModuleListItem) => {
     modals.openConfirmModal({
-      title: 'Delete role',
+      title: 'Delete module',
       children: (
         <Text size="sm">
-          Delete <strong>{row.roleName}</strong> ({row.roleCode})? This role is
-          assigned to{' '}
+          Delete <strong>{row.moduleName}</strong> ({row.moduleCode})? This will
+          also soft-delete{' '}
           <strong>
-            {row.userCount} user{row.userCount === 1 ? '' : 's'}
-          </strong>{' '}
-          and{' '}
-          <strong>
-            {row.groupCount} group{row.groupCount === 1 ? '' : 's'}
+            {row.permissionCount} permission
+            {row.permissionCount === 1 ? '' : 's'}
           </strong>
           .
         </Text>
@@ -169,11 +153,11 @@ export function RoleListPage() {
       confirmProps: { color: 'red' },
       onConfirm: async () => {
         try {
-          await deleteRole(row.roleId).unwrap()
+          await deleteModule(row.moduleId).unwrap()
           notify({
             type: 'success',
-            title: 'Role deleted',
-            message: `${row.roleName} has been deleted.`,
+            title: 'Module deleted',
+            message: `${row.moduleName} has been deleted.`,
           })
         } catch {
           // Shared base query shows API errors.
@@ -188,7 +172,7 @@ export function RoleListPage() {
   if (!canRead) {
     return (
       <Box p="xl">
-        <Text>You don&apos;t have permission to view roles.</Text>
+        <Text>You don&apos;t have permission to view modules.</Text>
       </Box>
     )
   }
@@ -198,14 +182,14 @@ export function RoleListPage() {
       <Stack gap="lg">
         <Group justify="space-between" align="flex-start" wrap="wrap">
           <Stack gap={4}>
-            <Title order={2}>Roles</Title>
+            <Title order={2}>Modules</Title>
             <Text c="dimmed" size="sm">
-              System-wide and tenant-specific roles for RBAC.
+              System modules that group permissions by functional area.
             </Text>
           </Stack>
           {canCreate ? (
             <Button leftSection={<Plus size={18} />} onClick={openCreateForm}>
-              Create role
+              Create module
             </Button>
           ) : null}
         </Group>
@@ -221,20 +205,10 @@ export function RoleListPage() {
               style={{ flex: 1, minWidth: 220 }}
             />
             <Select
-              label="Type"
-              data={TYPE_FILTERS}
-              value={filterType}
-              onChange={(v) =>
-                setFilterType((v ?? '') as '' | 'true' | 'false')
-              }
-              allowDeselect={false}
-              w={160}
-            />
-            <Select
               label="Status"
               data={STATUSES}
               value={filterStatus}
-              onChange={(v) => setFilterStatus((v ?? '') as RoleStatus | '')}
+              onChange={(v) => setFilterStatus((v ?? '') as ModuleStatus | '')}
               allowDeselect={false}
               w={160}
             />
@@ -243,7 +217,7 @@ export function RoleListPage() {
 
         {isError ? (
           <Text c="red" size="sm">
-            Could not load roles. Check the API and try again.
+            Could not load modules. Check the API and try again.
           </Text>
         ) : null}
 
@@ -254,40 +228,26 @@ export function RoleListPage() {
           totalPages={totalPages}
           page={page}
           onPageChange={setPage}
-          colSpan={isSuperAdmin ? 7 : 6}
-          minWidth={960}
-          countLabel="role(s)"
-          emptyMessage="No roles match the current filters."
+          colSpan={5}
+          minWidth={800}
+          countLabel="module(s)"
+          emptyMessage="No modules match the current filters."
         >
           <DataTable.Header>
             <SortTableHeader
               label="Code"
-              field="roleCode"
+              field="moduleCode"
               activeField={sortField}
               direction={sortDir}
               onSort={handleSort}
             />
             <SortTableHeader
               label="Name"
-              field="roleName"
+              field="moduleName"
               activeField={sortField}
               direction={sortDir}
               onSort={handleSort}
             />
-            <Table.Th>
-              <Text size="xs" tt="uppercase" fw={700} c="dimmed">
-                Type
-              </Text>
-            </Table.Th>
-            {isSuperAdmin ? (
-              <SortTableHeader
-                label="Scope"
-                field="tenantName"
-                activeField={sortField}
-                direction={sortDir}
-                onSort={handleSort}
-              />
-            ) : null}
             <Table.Th>
               <Text size="xs" tt="uppercase" fw={700} c="dimmed">
                 Permissions
@@ -309,56 +269,41 @@ export function RoleListPage() {
 
           <DataTable.Body>
             {rows.map((row) => (
-              <Table.Tr key={row.roleId}>
+              <Table.Tr key={row.moduleId}>
                 <Table.Td>
                   <Group gap={6} wrap="nowrap">
-                    {row.isSystemRole ? (
-                      <Tooltip label={roleLockReason(row)}>
+                    {row.isSystemModule ? (
+                      <Tooltip label={moduleLockReason()}>
                         <Lock size={14} />
                       </Tooltip>
                     ) : null}
                     <Badge
                       variant="light"
-                      color={row.isSystemRole ? 'blue' : 'neutral'}
+                      color={row.isSystemModule ? 'blue' : 'neutral'}
                       tt="uppercase"
                     >
-                      {row.roleCode}
+                      {row.moduleCode}
                     </Badge>
                   </Group>
                 </Table.Td>
                 <Table.Td>
                   <Stack gap={2}>
                     <Text size="sm" fw={500}>
-                      {row.roleName}
+                      {row.moduleName}
                     </Text>
-                    {row.roleNameAr ? (
+                    {row.moduleNameAr ? (
                       <Text size="xs" c="dimmed" dir="rtl">
-                        {row.roleNameAr}
+                        {row.moduleNameAr}
                       </Text>
                     ) : null}
                   </Stack>
                 </Table.Td>
                 <Table.Td>
-                  <Badge
-                    variant="light"
-                    color={row.isSystemRole ? 'blue' : 'neutral'}
-                  >
-                    {row.isSystemRole ? 'SYSTEM' : 'CUSTOM'}
-                  </Badge>
-                </Table.Td>
-                {isSuperAdmin ? (
-                  <Table.Td>
-                    <Text size="sm" c="dimmed">
-                      {row.tenantName ?? 'Global'}
-                    </Text>
-                  </Table.Td>
-                ) : null}
-                <Table.Td>
                   <Button
                     variant="subtle"
                     size="compact-sm"
                     component={Link}
-                    to={`/admin/roles/${row.roleId}/permissions`}
+                    to={`/admin/permissions?moduleId=${row.moduleId}`}
                   >
                     {row.permissionCount}
                   </Button>
@@ -366,37 +311,24 @@ export function RoleListPage() {
                 <Table.Td>
                   <StatusBadge
                     value={row.status}
-                    colorMap={ROLE_STATUS_COLORS}
+                    colorMap={MODULE_STATUS_COLORS}
                     variant="light"
                   />
                 </Table.Td>
                 <Table.Td ta="right" style={{ verticalAlign: 'middle' }}>
                   <Group gap={4} justify="flex-end" wrap="nowrap">
-                    <Tooltip label="View permissions">
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        aria-label="View role permissions"
-                        component={Link}
-                        to={`/admin/roles/${row.roleId}/permissions`}
-                      >
-                        <KeyRound size={18} />
-                      </ActionIcon>
-                    </Tooltip>
                     {canUpdate ? (
                       <Tooltip
                         label={
-                          isRoleLocked(row, isSuperAdmin)
-                            ? roleLockReason(row)
-                            : 'Edit'
+                          isModuleLocked(row) ? moduleLockReason() : 'Edit'
                         }
                       >
                         <ActionIcon
                           variant="subtle"
                           color="gray"
-                          aria-label="Edit role"
-                          disabled={isRoleLocked(row, isSuperAdmin)}
-                          onClick={() => openEditForm(row.roleId)}
+                          aria-label="Edit module"
+                          disabled={isModuleLocked(row)}
+                          onClick={() => openEditForm(row.moduleId)}
                         >
                           <Pencil size={18} />
                         </ActionIcon>
@@ -405,16 +337,14 @@ export function RoleListPage() {
                     {canDelete ? (
                       <Tooltip
                         label={
-                          isRoleLocked(row, isSuperAdmin)
-                            ? roleLockReason(row)
-                            : 'Delete'
+                          isModuleLocked(row) ? moduleLockReason() : 'Delete'
                         }
                       >
                         <ActionIcon
                           variant="subtle"
                           color="red"
-                          aria-label="Delete role"
-                          disabled={isRoleLocked(row, isSuperAdmin)}
+                          aria-label="Delete module"
+                          disabled={isModuleLocked(row)}
                           onClick={() => confirmDelete(row)}
                         >
                           <Trash2 size={18} />
@@ -429,10 +359,10 @@ export function RoleListPage() {
         </DataTable>
       </Stack>
 
-      <RoleForm
+      <ModuleForm
         opened={formOpened}
         onClose={closeForm}
-        roleId={editingRoleId}
+        moduleId={editingModuleId}
       />
     </Box>
   )

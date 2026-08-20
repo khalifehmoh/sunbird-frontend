@@ -349,7 +349,7 @@ export function TenantListPage() {
                   </Stack>
                 </Table.Td>
                 <Table.Td>
-                  <Badge variant="outline" color="gray">
+                  <Badge variant="outline" color="neutral">
                     {row.organizationType}
                   </Badge>
                 </Table.Td>

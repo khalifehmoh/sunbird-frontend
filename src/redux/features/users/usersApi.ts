@@ -8,6 +8,8 @@ export type {
   GetUsersArgs,
   CreateUserRequest,
   UserSessionItem,
+  ActiveSessionItem,
+  GetActiveSessionsArgs,
 } from './usersTypes'
 
 import type {
@@ -15,13 +17,15 @@ import type {
   GetUsersArgs,
   CreateUserRequest,
   UserSessionItem,
+  ActiveSessionItem,
+  GetActiveSessionsArgs,
   UserStatus,
 } from './usersTypes'
 
 export const usersApi = createApi({
   reducerPath: 'usersApi',
   baseQuery: coreBaseQuery,
-  tagTypes: ['UserList', 'User', 'UserSessions'],
+  tagTypes: ['UserList', 'User', 'UserSessions', 'ActiveSessions'],
   endpoints: (builder) => ({
     getUsers: builder.query<PagedResponse<UserListItem>, GetUsersArgs>({
       query: ({ page, size, search, status, tenantId, sort }) => {
@@ -127,13 +131,31 @@ export const usersApi = createApi({
         { type: 'UserSessions', id: userId },
       ],
     }),
+    getActiveSessions: builder.query<
+      PagedResponse<ActiveSessionItem>,
+      GetActiveSessionsArgs
+    >({
+      query: ({ page, size, search }) => {
+        const params = new URLSearchParams()
+        params.set('page', String(page))
+        params.set('size', String(size))
+        if (search.trim()) params.set('search', search.trim())
+        return `/sessions/active?${params.toString()}`
+      },
+      providesTags: [{ type: 'ActiveSessions', id: 'LIST' }],
+    }),
     terminateSession: builder.mutation<void, { sessionId: string; userId: string }>({
       query: ({ sessionId }) => ({
         url: `/sessions/${sessionId}`,
         method: 'DELETE',
       }),
       invalidatesTags: (_result, error, { userId }) =>
-        error ? [] : [{ type: 'UserSessions', id: userId }],
+        error
+          ? []
+          : [
+              { type: 'UserSessions', id: userId },
+              { type: 'ActiveSessions', id: 'LIST' },
+            ],
     }),
     terminateAllSessions: builder.mutation<{ terminated: number }, string>({
       query: (userId) => ({
@@ -141,7 +163,12 @@ export const usersApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: (_result, error, userId) =>
-        error ? [] : [{ type: 'UserSessions', id: userId }],
+        error
+          ? []
+          : [
+              { type: 'UserSessions', id: userId },
+              { type: 'ActiveSessions', id: 'LIST' },
+            ],
     }),
   }),
 })
@@ -156,6 +183,7 @@ export const {
   useBulkPatchUserStatusMutation,
   useResetUserPasswordMutation,
   useGetUserSessionsQuery,
+  useGetActiveSessionsQuery,
   useTerminateSessionMutation,
   useTerminateAllSessionsMutation,
 } = usersApi

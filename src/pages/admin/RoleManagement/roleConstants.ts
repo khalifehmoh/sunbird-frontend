@@ -7,7 +7,7 @@ export const ROLE_STATUS_OPTIONS: { value: RoleStatus; label: string }[] = [
 
 export const ROLE_STATUS_COLORS = {
   ACTIVE: 'teal',
-  INACTIVE: 'gray',
+  INACTIVE: 'neutral',
 } as const
 
 export const MATRIX_OPERATIONS = [

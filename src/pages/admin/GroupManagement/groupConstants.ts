@@ -7,6 +7,6 @@ export const GROUP_STATUS_OPTIONS: { value: GroupStatus; label: string }[] = [
 
 export const GROUP_STATUS_COLORS = {
   ACTIVE: 'teal',
-  INACTIVE: 'gray',
+  INACTIVE: 'neutral',
   SUSPENDED: 'orange',
 } as const

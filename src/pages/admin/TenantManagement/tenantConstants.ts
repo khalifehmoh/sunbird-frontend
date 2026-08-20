@@ -18,7 +18,7 @@ export const TENANT_STATUS_OPTIONS: { value: TenantStatus; label: string }[] = [
 
 export const TENANT_STATUS_COLORS = {
   ACTIVE: 'teal',
-  INACTIVE: 'gray',
+  INACTIVE: 'neutral',
   SUSPENDED: 'orange',
   PENDING: 'blue',
 } as const

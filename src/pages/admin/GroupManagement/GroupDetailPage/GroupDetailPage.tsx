@@ -221,10 +221,10 @@ export function GroupDetailPage() {
                 <Badge variant="light" color="violet" tt="uppercase">
                   {group.groupCode}
                 </Badge>
-                <Badge variant="outline" color="gray" leftSection={<Users size={12} />}>
+                <Badge variant="outline" color="neutral" leftSection={<Users size={12} />}>
                   {group.memberCount} members
                 </Badge>
-                <Badge variant="outline" color="gray" leftSection={<Shield size={12} />}>
+                <Badge variant="outline" color="neutral" leftSection={<Shield size={12} />}>
                   {group.roleCount} roles
                 </Badge>
               </Group>
@@ -382,7 +382,7 @@ export function GroupDetailPage() {
                       roles.map((role) => (
                         <Table.Tr key={role.groupRoleId}>
                           <Table.Td>
-                            <Badge variant="light" color="gray" tt="uppercase">
+                            <Badge variant="light" color="neutral" tt="uppercase">
                               {role.roleCode}
                             </Badge>
                           </Table.Td>
@@ -405,7 +405,7 @@ export function GroupDetailPage() {
                           <Table.Td>
                             <Badge
                               variant="outline"
-                              color={role.isSystemRole ? 'blue' : 'gray'}
+                              color={role.isSystemRole ? 'blue' : 'neutral'}
                             >
                               {role.isSystemRole ? 'System' : 'Tenant'}
                             </Badge>

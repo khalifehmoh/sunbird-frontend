@@ -5,11 +5,13 @@ import storage from 'redux-persist/lib/storage';
 import authReducer from './features/auth/authSlice';
 import { authApi } from './features/auth/authService';
 import { dashboardApi } from './features/dashboard/dashboardApi';
+import { auditApi } from './features/audit/auditApi';
 import { tenantsApi } from './features/tenants/tenantsApi';
 import { branchesApi } from './features/branches/branchesApi';
 import { usersApi } from './features/users/usersApi';
 import { groupsApi } from './features/groups/groupsApi';
 import { rolesApi } from './features/roles/rolesApi';
+import { modulesApi } from './features/modules/modulesApi';
 
 const authPersistConfig = {
   key: 'auth',
@@ -21,11 +23,13 @@ const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   [authApi.reducerPath]: authApi.reducer,
   [dashboardApi.reducerPath]: dashboardApi.reducer,
+  [auditApi.reducerPath]: auditApi.reducer,
   [tenantsApi.reducerPath]: tenantsApi.reducer,
   [branchesApi.reducerPath]: branchesApi.reducer,
   [usersApi.reducerPath]: usersApi.reducer,
   [groupsApi.reducerPath]: groupsApi.reducer,
   [rolesApi.reducerPath]: rolesApi.reducer,
+  [modulesApi.reducerPath]: modulesApi.reducer,
 });
 
 export const store = configureStore({
@@ -38,11 +42,13 @@ export const store = configureStore({
     }).concat(
       authApi.middleware,
       dashboardApi.middleware,
+      auditApi.middleware,
       tenantsApi.middleware,
       branchesApi.middleware,
       usersApi.middleware,
       groupsApi.middleware,
       rolesApi.middleware,
+      modulesApi.middleware,
     ),
 })
 

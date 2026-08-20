@@ -39,8 +39,8 @@ import {
   X,
 } from 'lucide-react'
 import { useGetBranchesQuery } from '../../../../redux/features/branches/branchesApi'
+import { useGetAuditEventsQuery } from '../../../../redux/features/audit/auditApi'
 import {
-  useGetTenantAuditQuery,
   useGetTenantConfigQuery,
   useGetTenantQuery,
   usePatchTenantStatusMutation,
@@ -190,9 +190,18 @@ export function TenantDetailPage() {
     data: audit,
     isLoading: auditLoading,
     isError: auditError,
-  } = useGetTenantAuditQuery(id, {
-    skip: !id || !canReadAudit || activeTab !== 'audit',
-  })
+  } = useGetAuditEventsQuery(
+    {
+      page: 0,
+      size: 50,
+      search: '',
+      tenantId: id,
+      sort: 'createdAt:desc',
+    },
+    {
+      skip: !id || !canReadAudit || activeTab !== 'audit',
+    },
+  )
 
   const [patchStatus, { isLoading: statusUpdating }] =
     usePatchTenantStatusMutation()
@@ -343,7 +352,7 @@ export function TenantDetailPage() {
                 ) : null}
                 <Group gap="xs">
                   <Badge variant="light">{tenant.tenantCode}</Badge>
-                  <Badge variant="outline" color="gray">
+                  <Badge variant="outline" color="neutral">
                     {tenant.organizationType}
                   </Badge>
                 </Group>
@@ -723,7 +732,7 @@ export function TenantDetailPage() {
                           </Table.Tr>
                         ) : (
                           audit?.content.map((event) => (
-                            <Table.Tr key={event.id}>
+                            <Table.Tr key={event.auditId}>
                               <Table.Td>
                                 <Text size="sm">
                                   {dayjs(event.createdAt).format(
@@ -736,7 +745,7 @@ export function TenantDetailPage() {
                                 <Badge variant="light">{event.actionType}</Badge>
                               </Table.Td>
                               <Table.Td>
-                                <Text size="sm">{event.entityName}</Text>
+                                <Text size="sm">{event.entityName ?? '—'}</Text>
                                 <Text size="xs" c="dimmed">
                                   {event.entityType}
                                 </Text>

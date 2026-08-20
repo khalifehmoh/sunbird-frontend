@@ -13,7 +13,7 @@ export const BRANCH_STATUS_OPTIONS: { value: BranchStatus; label: string }[] = [
 
 export const BRANCH_STATUS_COLORS: Record<BranchStatus, string> = {
   ACTIVE: 'teal',
-  INACTIVE: 'gray',
+  INACTIVE: 'neutral',
 }
 
 export const SAUDI_REGION_OPTIONS: { value: string; label: string }[] = [

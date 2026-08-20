@@ -250,7 +250,7 @@ export function UserDetailPage() {
                   <Badge variant="light">
                     <Code>{user.username}</Code>
                   </Badge>
-                  <Badge variant="outline" color="gray">
+                  <Badge variant="outline" color="neutral">
                     {user.role}
                   </Badge>
                   {user.mfaEnabled ? (

@@ -23,14 +23,14 @@ import { notify } from '../../../../lib/notify'
 import { useGetAssignableRolesQuery } from '../../../../redux/features/groups/groupsApi'
 import {
   useBatchRolePermissionsMutation,
-  useGetModulesQuery,
   useGetRolePermissionsQuery,
   useGetRoleQuery,
   useGrantRolePermissionMutation,
   useLazyGetRolePermissionsQuery,
   useRevokeRolePermissionMutation,
 } from '../../../../redux/features/roles/rolesApi'
-import type { ModulePermissionItem } from '../../../../redux/features/roles/rolesTypes'
+import { useGetModuleCatalogQuery } from '../../../../redux/features/modules/modulesApi'
+import type { ModulePermissionItem } from '../../../../redux/features/modules/modulesTypes'
 import { usePermissions } from '../../../../hooks/usePermissions'
 import { isPlatformAdmin } from '../../../../hooks/useAuth'
 import { useAppSelector } from '../../../../redux/store'
@@ -84,10 +84,8 @@ export function RolePermissionsMatrixPage() {
     isLoading: roleLoading,
     isError: roleError,
   } = useGetRoleQuery(roleId, { skip: !roleId || !canRead })
-  const { data: modules = [], isLoading: modulesLoading } = useGetModulesQuery(
-    undefined,
-    { skip: !canRead },
-  )
+  const { data: modules = [], isLoading: modulesLoading } =
+    useGetModuleCatalogQuery(undefined, { skip: !canRead })
   const { data: granted = [] } =
     useGetRolePermissionsQuery(roleId, { skip: !roleId || !canRead })
 
@@ -342,7 +340,7 @@ export function RolePermissionsMatrixPage() {
                 {role ? (
                   <Badge
                     variant="light"
-                    color={role.isSystemRole ? 'blue' : 'gray'}
+                    color={role.isSystemRole ? 'blue' : 'neutral'}
                   >
                     {role.isSystemRole ? 'SYSTEM' : 'CUSTOM'}
                   </Badge>

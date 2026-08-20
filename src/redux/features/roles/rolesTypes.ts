@@ -52,23 +52,3 @@ export interface RolePermissionItem {
   operation: string
   grantedAt: string | null
 }
-
-export interface ModulePermissionItem {
-  permissionId: string
-  permissionCode: string
-  permissionName: string
-  permissionNameAr: string | null
-  operation: string
-}
-
-export interface ModuleItem {
-  moduleId: string
-  moduleCode: string
-  moduleName: string
-  moduleNameAr: string | null
-  moduleDescription: string | null
-  isSystemModule: boolean
-  displayOrder: number | null
-  status: string
-  permissions: ModulePermissionItem[]
-}

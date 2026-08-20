@@ -3,6 +3,10 @@ import { AdminLayout } from '../layouts/AdminLayout/AdminLayout'
 import { RootLayout } from '../layouts/RootLayout/RootLayout'
 import { HomePage } from '../pages/HomePage/HomePage'
 import { PlaceholderPage } from '../pages/PlaceholderPage/PlaceholderPage'
+import { AuditLogPage } from '../pages/admin/AuditManagement/AuditLogPage/AuditLogPage'
+import { AuditDetailPage } from '../pages/admin/AuditManagement/AuditDetailPage/AuditDetailPage'
+import { ActiveSessionsPage } from '../pages/admin/AuditManagement/ActiveSessionsPage/ActiveSessionsPage'
+import { FailedLoginsPage } from '../pages/admin/AuditManagement/FailedLoginsPage/FailedLoginsPage'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage/AdminDashboardPage'
 import { TenantListPage } from '../pages/admin/TenantManagement/TenantListPage/TenantListPage'
 import { TenantDetailPage } from '../pages/admin/TenantManagement/TenantDetailPage/TenantDetailPage'
@@ -14,6 +18,8 @@ import { GroupListPage } from '../pages/admin/GroupManagement/GroupListPage/Grou
 import { GroupDetailPage } from '../pages/admin/GroupManagement/GroupDetailPage/GroupDetailPage'
 import { RoleListPage } from '../pages/admin/RoleManagement/RoleListPage/RoleListPage'
 import { RolePermissionsMatrixPage } from '../pages/admin/RoleManagement/RolePermissionsMatrixPage/RolePermissionsMatrixPage'
+import { ModuleListPage } from '../pages/admin/ModuleManagement/ModuleListPage/ModuleListPage'
+import { PermissionListPage } from '../pages/admin/PermissionManagement/PermissionListPage/PermissionListPage'
 import { LoginPage } from '../pages/LoginPage/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage/RegisterPage'
 import { ChangePasswordPage } from '../pages/ChangePasswordPage/ChangePasswordPage'
@@ -44,6 +50,16 @@ function GroupEditRedirect() {
 function RoleEditRedirect() {
   const { id } = useParams()
   return <Navigate to={`/admin/roles?edit=${id ?? ''}`} replace />
+}
+
+function ModuleEditRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/admin/modules?edit=${id ?? ''}`} replace />
+}
+
+function PermissionEditRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/admin/permissions?edit=${id ?? ''}`} replace />
 }
 
 export const router = createBrowserRouter([
@@ -104,12 +120,22 @@ export const router = createBrowserRouter([
             element: <RolePermissionsMatrixPage />,
           },
           { path: 'roles', element: <RoleListPage /> },
-          { path: 'modules', element: <PlaceholderPage title="Modules" /> },
-          { path: 'permissions', element: <PlaceholderPage title="Permissions" /> },
-          { path: 'audit', element: <PlaceholderPage title="Audit log" /> },
-          { path: 'audit/:id', element: <PlaceholderPage title="Audit event" /> },
-          { path: 'sessions', element: <PlaceholderPage title="Active sessions" /> },
-          { path: 'security/failed-logins', element: <PlaceholderPage title="Failed login report" /> },
+          {
+            path: 'modules/new',
+            element: <Navigate to="/admin/modules?create=true" replace />,
+          },
+          { path: 'modules/:id/edit', element: <ModuleEditRedirect /> },
+          { path: 'modules', element: <ModuleListPage /> },
+          {
+            path: 'permissions/new',
+            element: <Navigate to="/admin/permissions?create=true" replace />,
+          },
+          { path: 'permissions/:id/edit', element: <PermissionEditRedirect /> },
+          { path: 'permissions', element: <PermissionListPage /> },
+          { path: 'audit', element: <AuditLogPage /> },
+          { path: 'audit/:id', element: <AuditDetailPage /> },
+          { path: 'sessions', element: <ActiveSessionsPage /> },
+          { path: 'security/failed-logins', element: <FailedLoginsPage /> },
           { path: '*', element: <Navigate to="/admin" replace /> },
         ],
       },

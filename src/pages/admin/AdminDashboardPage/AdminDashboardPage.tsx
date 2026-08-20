@@ -25,69 +25,13 @@ import {
   CheckCircle2,
   XCircle,
 } from 'lucide-react'
-import {
-  useGetDashboardStatsQuery,
-  useGetRecentAuditEventsQuery,
-  type AuditEvent,
-  type AuditEventsResponse,
-  type DashboardStats,
-} from '../../../redux/features/dashboard/dashboardApi'
+import { useGetDashboardStatsQuery } from '../../../redux/features/dashboard/dashboardApi'
+import { useGetAuditEventsQuery } from '../../../redux/features/audit/auditApi'
+import type { AuditEvent } from '../../../redux/features/audit/auditTypes'
 import { StatCard } from '../../../components/StatCard/StatCard'
 import { formatDistanceToNow } from '../../../utils/time'
-
-// ---------------------------------------------------------------------------
-// Dummy data — used when the API is unavailable (development / testing)
-// ---------------------------------------------------------------------------
-
-const DUMMY_STATS: DashboardStats = {
-  tenantCount: 12,
-  userCount: 148,
-  activeSessionCount: 23,
-  auditCount24h: 317,
-  activityByDay: [
-    { date: 'Mon', count: 42 },
-    { date: 'Tue', count: 87 },
-    { date: 'Wed', count: 61 },
-    { date: 'Thu', count: 105 },
-    { date: 'Fri', count: 93 },
-    { date: 'Sat', count: 34 },
-    { date: 'Sun', count: 19 },
-  ],
-}
-
-const DUMMY_AUDIT_EVENTS: AuditEventsResponse = {
-  content: [
-    { id: '1', createdAt: new Date(Date.now() - 3 * 60000).toISOString(),   username: 'admin',      actionType: 'LOGIN',        entityType: 'USER',       entityName: 'admin',           success: true  },
-    { id: '2', createdAt: new Date(Date.now() - 8 * 60000).toISOString(),   username: 'zeina',      actionType: 'UPDATE',       entityType: 'TENANT',     entityName: 'Al-Shifa Hosp.',  success: true  },
-    { id: '3', createdAt: new Date(Date.now() - 15 * 60000).toISOString(),  username: 'mohammad',   actionType: 'CREATE',       entityType: 'USER',       entityName: 'new.user',        success: true  },
-    { id: '4', createdAt: new Date(Date.now() - 22 * 60000).toISOString(),  username: null,         actionType: 'FAILED_LOGIN', entityType: 'USER',       entityName: 'unknown',         success: false },
-    { id: '5', createdAt: new Date(Date.now() - 45 * 60000).toISOString(),  username: 'alaa',       actionType: 'DELETE',       entityType: 'BRANCH',     entityName: 'East Branch',     success: true  },
-    { id: '6', createdAt: new Date(Date.now() - 70 * 60000).toISOString(),  username: 'zeina',      actionType: 'CREATE',       entityType: 'ROLE',       entityName: 'BRANCH_MANAGER',  success: true  },
-    { id: '7', createdAt: new Date(Date.now() - 95 * 60000).toISOString(),  username: 'mohammad',   actionType: 'UPDATE',       entityType: 'PERMISSION', entityName: 'USER:DELETE',     success: true  },
-    { id: '8', createdAt: new Date(Date.now() - 130 * 60000).toISOString(), username: null,         actionType: 'FAILED_LOGIN', entityType: 'USER',       entityName: 'hacker123',       success: false },
-    { id: '9', createdAt: new Date(Date.now() - 160 * 60000).toISOString(), username: 'admin',      actionType: 'APPROVE',      entityType: 'TENANT',     entityName: 'Gulf Medical',    success: true  },
-    { id: '10', createdAt: new Date(Date.now() - 200 * 60000).toISOString(), username: 'alaa',      actionType: 'LOGOUT',       entityType: 'USER',       entityName: 'alaa',            success: true  },
-  ],
-  totalElements: 10,
-  totalPages: 1,
-  page: 0,
-  size: 10,
-}
-
-const ACTION_COLORS: Record<string, string> = {
-  CREATE: 'teal',
-  UPDATE: 'yellow',
-  DELETE: 'red',
-  LOGIN: 'blue',
-  LOGOUT: 'gray',
-  FAILED_LOGIN: 'orange',
-  APPROVE: 'green',
-  REVOKE: 'pink',
-}
-
-function auditActionColor(action: string) {
-  return ACTION_COLORS[action] ?? 'gray'
-}
+import { auditActionColor } from '../AuditManagement/auditConstants'
+import { usePermissions } from '../../../hooks/usePermissions'
 
 function DashboardAuditRow({ event }: { event: AuditEvent }) {
   const navigate = useNavigate()
@@ -95,7 +39,7 @@ function DashboardAuditRow({ event }: { event: AuditEvent }) {
   return (
     <Table.Tr
       style={{ cursor: 'pointer' }}
-      onClick={() => navigate(`/admin/audit/${event.id}`)}
+      onClick={() => navigate(`/admin/audit/${event.auditId}`)}
     >
       <Table.Td>
         <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
@@ -124,13 +68,13 @@ function DashboardAuditRow({ event }: { event: AuditEvent }) {
         </Badge>
       </Table.Td>
       <Table.Td>
-        <Badge variant="outline" size="sm" color="gray">
+        <Badge variant="outline" size="sm" color="neutral">
           {event.entityType}
         </Badge>
       </Table.Td>
       <Table.Td>
         <Text size="sm" truncate maw={160}>
-          {event.entityName}
+          {event.entityName ?? '—'}
         </Text>
       </Table.Td>
       <Table.Td>
@@ -150,38 +94,39 @@ function DashboardAuditRow({ event }: { event: AuditEvent }) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
-
 export function AdminDashboardPage() {
   const navigate = useNavigate()
+  const canReadAudit = usePermissions('AUDIT:READ')
 
   const {
-    data: statsData,
+    data: stats,
     isLoading: statsLoading,
     isError: statsError,
   } = useGetDashboardStatsQuery()
 
   const {
-    data: auditApiData,
+    data: auditData,
     isLoading: auditLoading,
-  } = useGetRecentAuditEventsQuery()
-
-  // Fall back to dummy data when the API hasn't returned yet or errored
-  const stats = statsData ?? (statsLoading ? undefined : DUMMY_STATS)
-  const auditData = auditApiData ?? (auditLoading ? undefined : DUMMY_AUDIT_EVENTS)
+    isError: auditError,
+  } = useGetAuditEventsQuery(
+    {
+      page: 0,
+      size: 10,
+      search: '',
+      sort: 'createdAt:desc',
+    },
+    { skip: !canReadAudit },
+  )
 
   const chartData =
-    stats?.activityByDay?.map((d) => ({
-      date: d.date,
-      Events: d.count,
+    stats?.activityByDay?.map((day) => ({
+      date: day.date,
+      Events: day.count,
     })) ?? []
 
   return (
     <Box p="xl">
       <Stack gap="xl">
-        {/* Page header */}
         <Group justify="space-between" align="flex-start">
           <Stack gap={2}>
             <Title order={2}>Admin Dashboard</Title>
@@ -197,13 +142,12 @@ export function AdminDashboardPage() {
                 variant="light"
                 leftSection={<ShieldAlert size={12} />}
               >
-                API unavailable — showing demo data
+                Could not load dashboard stats
               </Badge>
             )}
           </Group>
         </Group>
 
-        {/* KPI cards */}
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="md">
           <StatCard
             label="Active Tenants"
@@ -239,7 +183,6 @@ export function AdminDashboardPage() {
           />
         </SimpleGrid>
 
-        {/* Activity chart */}
         <Paper withBorder radius="md" p="lg">
           <Stack gap="md">
             <Stack gap={2}>
@@ -265,64 +208,85 @@ export function AdminDashboardPage() {
           </Stack>
         </Paper>
 
-        {/* Recent audit events */}
-        <Paper withBorder radius="md" p="lg">
-          <Group justify="space-between" mb="md">
-            <Stack gap={2}>
-              <Text fw={600}>Recent Audit Events</Text>
-              <Text size="xs" c="dimmed">
-                Last 10 system events
-              </Text>
-            </Stack>
-            <UnstyledButton
-              onClick={() => navigate('/admin/audit')}
-              style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-            >
-              <Text size="sm" c="blue" fw={500}>
-                View full log
-              </Text>
-              <ExternalLink size={14} color="var(--mantine-color-blue-6)" />
-            </UnstyledButton>
-          </Group>
+        {canReadAudit ? (
+          <Paper withBorder radius="md" p="lg">
+            <Group justify="space-between" mb="md">
+              <Stack gap={2}>
+                <Text fw={600}>Recent Audit Events</Text>
+                <Text size="xs" c="dimmed">
+                  Last 10 system events
+                </Text>
+              </Stack>
+              <UnstyledButton
+                onClick={() => navigate('/admin/audit')}
+                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+              >
+                <Text size="sm" c="blue" fw={500}>
+                  View full log
+                </Text>
+                <ExternalLink size={14} color="var(--mantine-color-blue-6)" />
+              </UnstyledButton>
+            </Group>
 
-          {auditLoading ? (
-            <Stack gap="xs">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} height={36} radius="sm" />
-              ))}
-            </Stack>
-          ) : (
-            <Table highlightOnHover striped withTableBorder={false}>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>
-                    <Text size="xs" tt="uppercase" fw={700} c="dimmed">Time</Text>
-                  </Table.Th>
-                  <Table.Th>
-                    <Text size="xs" tt="uppercase" fw={700} c="dimmed">User</Text>
-                  </Table.Th>
-                  <Table.Th>
-                    <Text size="xs" tt="uppercase" fw={700} c="dimmed">Action</Text>
-                  </Table.Th>
-                  <Table.Th>
-                    <Text size="xs" tt="uppercase" fw={700} c="dimmed">Entity</Text>
-                  </Table.Th>
-                  <Table.Th>
-                    <Text size="xs" tt="uppercase" fw={700} c="dimmed">Name</Text>
-                  </Table.Th>
-                  <Table.Th>
-                    <Text size="xs" tt="uppercase" fw={700} c="dimmed">Result</Text>
-                  </Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {(auditData?.content ?? []).map((event) => (
-                  <DashboardAuditRow key={event.id} event={event} />
+            {auditLoading ? (
+              <Stack gap="xs">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Skeleton key={index} height={36} radius="sm" />
                 ))}
-              </Table.Tbody>
-            </Table>
-          )}
-        </Paper>
+              </Stack>
+            ) : auditError ? (
+              <Text size="sm" c="red">
+                Could not load recent audit events.
+              </Text>
+            ) : (auditData?.content ?? []).length === 0 ? (
+              <Text size="sm" c="dimmed">
+                No audit events yet.
+              </Text>
+            ) : (
+              <Table highlightOnHover striped withTableBorder={false}>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>
+                      <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                        Time
+                      </Text>
+                    </Table.Th>
+                    <Table.Th>
+                      <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                        User
+                      </Text>
+                    </Table.Th>
+                    <Table.Th>
+                      <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                        Action
+                      </Text>
+                    </Table.Th>
+                    <Table.Th>
+                      <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                        Entity
+                      </Text>
+                    </Table.Th>
+                    <Table.Th>
+                      <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                        Name
+                      </Text>
+                    </Table.Th>
+                    <Table.Th>
+                      <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                        Result
+                      </Text>
+                    </Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {(auditData?.content ?? []).map((event) => (
+                    <DashboardAuditRow key={event.auditId} event={event} />
+                  ))}
+                </Table.Tbody>
+              </Table>
+            )}
+          </Paper>
+        ) : null}
       </Stack>
     </Box>
   )

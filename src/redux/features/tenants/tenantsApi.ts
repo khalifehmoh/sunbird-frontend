@@ -8,7 +8,6 @@ export type {
   GetTenantsArgs,
   CreateTenantRequest,
   TenantConfigItem,
-  TenantAuditResponse,
 } from './tenantsTypes'
 
 import type {
@@ -16,7 +15,6 @@ import type {
   GetTenantsArgs,
   CreateTenantRequest,
   TenantConfigItem,
-  TenantAuditResponse,
   TenantStatus,
 } from './tenantsTypes'
 
@@ -44,7 +42,7 @@ function toTenantsPageResponse(
 export const tenantsApi = createApi({
   reducerPath: 'tenantsApi',
   baseQuery: coreBaseQuery,
-  tagTypes: ['TenantList', 'Tenant', 'TenantConfig', 'TenantAudit'],
+  tagTypes: ['TenantList', 'Tenant', 'TenantConfig'],
   endpoints: (builder) => ({
     getTenants: builder.query<PagedResponse<TenantListItem>, GetTenantsArgs>({
       query: ({ page, size, search, status, type, sort }) => {
@@ -144,12 +142,6 @@ export const tenantsApi = createApi({
       invalidatesTags: (_result, error, { tenantId }) =>
         error ? [] : [{ type: 'TenantConfig', id: tenantId }],
     }),
-    getTenantAudit: builder.query<TenantAuditResponse, string>({
-      query: (tenantId) => `/audit?tenantId=${tenantId}&limit=50`,
-      providesTags: (_result, _error, tenantId) => [
-        { type: 'TenantAudit', id: tenantId },
-      ],
-    }),
   }),
 })
 
@@ -162,5 +154,4 @@ export const {
   usePatchTenantStatusMutation,
   useGetTenantConfigQuery,
   useUpdateTenantConfigMutation,
-  useGetTenantAuditQuery,
 } = tenantsApi

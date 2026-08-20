@@ -62,6 +62,20 @@ export const slateCare: MantineColorsTuple = [
   '#2c3545',
 ]
 
+/** Mid gray for code/neutral badges — darker than default gray, lighter than dark. */
+export const neutral: MantineColorsTuple = [
+  '#f2f4f6',
+  '#e6e9ed',
+  '#cfd5dc',
+  '#b3bbc4',
+  '#8f99a6',
+  '#6f7b89',
+  '#5a6572',
+  '#4a535e',
+  '#3d454e',
+  '#2f353c',
+]
+
 const SHARED = {
   defaultRadius: 'md',
   fontFamily:
@@ -75,6 +89,11 @@ const SHARED = {
     Modal: {
       styles: {
         title: { fontWeight: 700 },
+      },
+    },
+    Badge: {
+      defaultProps: {
+        color: 'neutral',
       },
     },
   },
@@ -117,6 +136,6 @@ export function createMedicalTheme(preset: MedicalPresetId) {
   return createTheme({
     ...SHARED,
     primaryColor: meta.primaryColor,
-    colors: meta.colors,
+    colors: { ...meta.colors, neutral },
   })
 }

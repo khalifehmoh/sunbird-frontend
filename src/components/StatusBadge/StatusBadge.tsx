@@ -11,7 +11,7 @@ export type StatusBadgeProps = Omit<BadgeProps, 'color'> & {
 export function StatusBadge({
   value,
   colorMap,
-  defaultColor = 'gray',
+  defaultColor = 'neutral',
   children,
   ...badgeProps
 }: StatusBadgeProps) {
