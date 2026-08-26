@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@mantine/core'
-import { ArrowLeft, ShieldCog } from 'lucide-react'
+import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import { NavbarLinksGroup } from '../NavbarLinksGroup/NavbarLinksGroup'
 import { useIsPlatformAdmin } from '../../hooks/useAuth'
 
@@ -27,7 +27,7 @@ export function AdminDashboardLink({ variant }: AdminDashboardLinkProps) {
         to={ADMIN_DASHBOARD_PATH}
         variant="light"
         size="sm"
-        leftSection={<ShieldCog size={16} strokeWidth={1.75} />}
+        leftSection={<ShieldCheck size={16} strokeWidth={1.75} />}
       >
         Admin
       </Button>
@@ -36,7 +36,7 @@ export function AdminDashboardLink({ variant }: AdminDashboardLinkProps) {
 
   return (
     <NavbarLinksGroup
-      icon={ShieldCog}
+      icon={ShieldCheck}
       label="Admin dashboard"
       link={ADMIN_DASHBOARD_PATH}
     />
