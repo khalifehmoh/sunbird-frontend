@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { BrandLogo } from '../../components/BrandLogo/BrandLogo'
 import { ThemeToggle } from '../../components/ThemeToggle'
+import { BackToAppButton } from '../../components/AdminDashboardLink/AdminDashboardLink'
 import { NavbarLinksGroup } from '../../components/NavbarLinksGroup/NavbarLinksGroup'
 import { NavbarUserFooter } from '../../components/NavbarUserFooter/NavbarUserFooter'
 import classes from './AdminLayout.module.css'
@@ -71,7 +72,10 @@ export function AdminLayout() {
               Admin
             </Badge>
           </Group>
-          <ThemeToggle />
+          <Group gap="sm">
+            <BackToAppButton />
+            <ThemeToggle />
+          </Group>
         </Group>
       </AppShell.Header>
 

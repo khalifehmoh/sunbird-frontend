@@ -8,3 +8,8 @@ export function useAuth(): AuthState {
 export function isPlatformAdmin(role?: string | null): boolean {
   return role === 'ADMIN' || role === 'SUPER_ADMIN'
 }
+
+export function useIsPlatformAdmin(): boolean {
+  const { role } = useAuth()
+  return isPlatformAdmin(role)
+}
