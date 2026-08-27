@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { coreBaseQuery } from '../../baseQuery'
 import type { PagedResponse } from '../../../lib/paging'
+import { usersApi } from '../users/usersApi'
 export type {
   GroupStatus,
   GroupListItem,
@@ -69,6 +70,20 @@ export const groupsApi = createApi({
                 ? [{ type: 'Group' as const, id: group.groupId }]
                 : []),
             ],
+      async onQueryStarted(_group, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserGroups' },
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     deleteGroup: builder.mutation<void, string>({
       query: (groupId) => ({
@@ -81,7 +96,23 @@ export const groupsApi = createApi({
           : [
               { type: 'GroupList', id: 'LIST' },
               { type: 'Group', id: groupId },
+              { type: 'GroupMembers', id: groupId },
+              { type: 'GroupRoles', id: groupId },
             ],
+      async onQueryStarted(_groupId, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserGroups' },
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     getGroupMembers: builder.query<GroupMemberItem[], string>({
       query: (groupId) => `/groups/${groupId}/members`,
@@ -106,6 +137,20 @@ export const groupsApi = createApi({
               { type: 'GroupMembers', id: groupId },
               { type: 'GroupRoles', id: groupId },
             ],
+      async onQueryStarted({ userId }, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserGroups', id: userId },
+              { type: 'UserRoles', id: userId },
+              { type: 'UserEffectivePermissions', id: userId },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     removeGroupMember: builder.mutation<
       void,
@@ -124,6 +169,20 @@ export const groupsApi = createApi({
               { type: 'GroupMembers', id: groupId },
               { type: 'GroupRoles', id: groupId },
             ],
+      async onQueryStarted({ userId }, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserGroups', id: userId },
+              { type: 'UserRoles', id: userId },
+              { type: 'UserEffectivePermissions', id: userId },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     getGroupRoles: builder.query<GroupRoleItem[], string>({
       query: (groupId) => `/groups/${groupId}/roles`,
@@ -147,6 +206,19 @@ export const groupsApi = createApi({
               { type: 'Group', id: groupId },
               { type: 'GroupRoles', id: groupId },
             ],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserEffectivePermissions' },
+              { type: 'UserRoles' }
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     revokeGroupRole: builder.mutation<
       void,
@@ -164,6 +236,19 @@ export const groupsApi = createApi({
               { type: 'Group', id: groupId },
               { type: 'GroupRoles', id: groupId },
             ],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserEffectivePermissions' },
+              { type: 'UserRoles' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     getAssignableRoles: builder.query<RoleOption[], string | undefined>({
       query: (tenantId) => {

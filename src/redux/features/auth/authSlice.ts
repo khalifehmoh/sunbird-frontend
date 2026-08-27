@@ -9,6 +9,7 @@ const initialState: AuthState = {
   tenantId: null,
   requirePasswordChange: false,
   mfaEnabled: false,
+  permissions: [],
 }
 
 export const authSlice = createSlice({
@@ -16,14 +17,15 @@ export const authSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<SetUserPayload>) => {
-      const { username, email, role, tenantId, requirePasswordChange, mfaEnabled } = action.payload
+      const { username, email, role, tenantId, requirePasswordChange, mfaEnabled, permissions } = action.payload
       state.isAuthenticated = true
       state.username = username
       state.email = email
-      state.role = role
+      state.role = role ?? ''
       state.tenantId = tenantId ?? null
       state.requirePasswordChange = requirePasswordChange ?? false
       state.mfaEnabled = mfaEnabled ?? false
+      state.permissions = permissions ?? []
     },
     logout: () => initialState,
   },

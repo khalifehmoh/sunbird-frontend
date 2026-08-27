@@ -28,6 +28,7 @@ import {
   useGetTenantsQuery,
 } from '../../../../redux/features/tenants/tenantsApi'
 import { usePermissions } from '../../../../hooks/usePermissions'
+import { isPlatformAdmin } from '../../../../hooks/useAuth'
 import { useAppSelector } from '../../../../redux/store'
 import {
   BRANCH_STATUS_OPTIONS,
@@ -73,7 +74,7 @@ export function BranchForm({
   const { role, tenantId: currentTenantId } = useAppSelector(
     (state) => state.auth,
   )
-  const isSuperAdmin = role === 'ADMIN'
+  const isSuperAdmin = isPlatformAdmin(role)
   const canCreate = usePermissions('BRANCH:CREATE')
   const canUpdate = usePermissions('BRANCH:UPDATE')
   const canUseForm = isEdit ? canUpdate : canCreate

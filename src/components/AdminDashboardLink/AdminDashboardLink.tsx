@@ -1,38 +1,17 @@
-import { Link } from 'react-router-dom'
-import { Button } from '@mantine/core'
-import { ArrowLeft, ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { NavbarLinksGroup } from '../NavbarLinksGroup/NavbarLinksGroup'
-import { useIsPlatformAdmin } from '../../hooks/useAuth'
+import { useCanAccessAdmin } from '../../hooks/useAuth'
 
 export const ADMIN_DASHBOARD_PATH = '/admin'
-export const APP_HOME_PATH = '/'
-
-interface AdminDashboardLinkProps {
-  /** `header` is a compact chrome button; `nav` matches sidebar nav items. */
-  variant: 'header' | 'nav'
-}
 
 /**
- * Entry into `/admin`. Lives in app chrome (header / sidebar) so it survives
- * homepage replacement. Hidden for non-admins.
+ * Entry into `/admin`. Lives in app chrome (sidebar) so it survives
+ * homepage replacement. Hidden unless the user is a platform admin
+ * or holds an admin-console permission.
  */
-export function AdminDashboardLink({ variant }: AdminDashboardLinkProps) {
-  const isAdmin = useIsPlatformAdmin()
-  if (!isAdmin) return null
-
-  if (variant === 'header') {
-    return (
-      <Button
-        component={Link}
-        to={ADMIN_DASHBOARD_PATH}
-        variant="light"
-        size="sm"
-        leftSection={<ShieldCheck size={16} strokeWidth={1.75} />}
-      >
-        Admin
-      </Button>
-    )
-  }
+export function AdminDashboardLink() {
+  const canAccess = useCanAccessAdmin()
+  if (!canAccess) return null
 
   return (
     <NavbarLinksGroup
@@ -40,19 +19,5 @@ export function AdminDashboardLink({ variant }: AdminDashboardLinkProps) {
       label="Admin dashboard"
       link={ADMIN_DASHBOARD_PATH}
     />
-  )
-}
-
-export function BackToAppButton() {
-  return (
-    <Button
-      component={Link}
-      to={APP_HOME_PATH}
-      variant="default"
-      size="sm"
-      leftSection={<ArrowLeft size={16} strokeWidth={1.75} />}
-    >
-      Back to app
-    </Button>
   )
 }

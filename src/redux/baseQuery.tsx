@@ -106,6 +106,7 @@ async function tryRefreshSession(
           tenantId: profile.tenantId,
           requirePasswordChange: profile.requirePasswordChange,
           mfaEnabled: profile.mfaEnabled,
+          permissions: profile.permissions ?? [],
         }),
       )
       return true

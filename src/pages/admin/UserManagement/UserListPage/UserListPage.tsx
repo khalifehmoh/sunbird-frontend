@@ -60,6 +60,8 @@ import { SortTableHeader } from '../../../../components/SortTableHeader/SortTabl
 import { StatusBadge } from '../../../../components/StatusBadge/StatusBadge'
 import { DataTable } from '../../../../components/DataTable/DataTable'
 import { usePermissions } from '../../../../hooks/usePermissions'
+import { Permission } from '../../../../constants/permissions'
+import { isPlatformAdmin } from '../../../../hooks/useAuth'
 import { useAppSelector } from '../../../../redux/store'
 
 dayjs.extend(relativeTime)
@@ -84,11 +86,11 @@ export function UserListPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const role = useAppSelector((state) => state.auth.role)
-  const isSuperAdmin = role === 'ADMIN'
-  const canRead = usePermissions('USER:READ')
-  const canCreate = usePermissions('USER:CREATE')
-  const canUpdate = usePermissions('USER:UPDATE')
-  const canDelete = usePermissions('USER:DELETE')
+  const isSuperAdmin = isPlatformAdmin(role)
+  const canRead = usePermissions(Permission.USER_READ)
+  const canCreate = usePermissions(Permission.USER_CREATE)
+  const canUpdate = usePermissions(Permission.USER_UPDATE)
+  const canDelete = usePermissions(Permission.USER_DELETE)
 
   const [formOpened, setFormOpened] = useState(
     searchParams.get('create') === 'true' || Boolean(searchParams.get('edit')),

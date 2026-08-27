@@ -255,8 +255,8 @@ export function GroupDetailPage() {
 
             <Tabs.Panel value="members" pt="md">
               <Stack gap="md">
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
+                <Group justify="space-between" wrap="nowrap" align="center" gap="xl">
+                  <Text size="sm" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
                     Users in this group inherit every assigned role.
                   </Text>
                   {canUpdate ? (
@@ -264,6 +264,7 @@ export function GroupDetailPage() {
                       size="sm"
                       leftSection={<Plus size={16} />}
                       onClick={() => setAddMemberOpened(true)}
+                      style={{ flexShrink: 0 }}
                     >
                       Add member
                     </Button>
@@ -297,7 +298,13 @@ export function GroupDetailPage() {
                       </Table.Tr>
                     ) : (
                       members.map((member) => (
-                        <Table.Tr key={member.memberId}>
+                        <Table.Tr
+                          key={member.memberId}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() =>
+                            navigate(`/admin/users/${member.userId}`)
+                          }
+                        >
                           <Table.Td>
                             <Text size="sm" fw={500}>
                               {member.fullName || member.username}
@@ -309,7 +316,10 @@ export function GroupDetailPage() {
                           <Table.Td>
                             <Text size="sm">{member.email}</Text>
                           </Table.Td>
-                          <Table.Td ta="right">
+                          <Table.Td
+                            ta="right"
+                            onClick={(event) => event.stopPropagation()}
+                          >
                             {canUpdate ? (
                               <Tooltip label="Remove member">
                                 <ActionIcon
@@ -380,7 +390,15 @@ export function GroupDetailPage() {
                       </Table.Tr>
                     ) : (
                       roles.map((role) => (
-                        <Table.Tr key={role.groupRoleId}>
+                        <Table.Tr
+                          key={role.groupRoleId}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() =>
+                            navigate(
+                              `/admin/roles/${role.roleId}/permissions`,
+                            )
+                          }
+                        >
                           <Table.Td>
                             <Badge variant="light" color="neutral" tt="uppercase">
                               {role.roleCode}
@@ -410,7 +428,10 @@ export function GroupDetailPage() {
                               {role.isSystemRole ? 'System' : 'Tenant'}
                             </Badge>
                           </Table.Td>
-                          <Table.Td ta="right">
+                          <Table.Td
+                            ta="right"
+                            onClick={(event) => event.stopPropagation()}
+                          >
                             {canRevokeRole ? (
                               <Tooltip label="Revoke role">
                                 <ActionIcon
@@ -524,25 +545,42 @@ function AddMemberModal({
             No matching users in this tenant.
           </Text>
         ) : (
-          candidates.map((user) => (
-            <Group key={user.userId} justify="space-between">
-              <Stack gap={0}>
-                <Text size="sm" fw={500}>
-                  {userDisplayName(user)}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {user.username} · {user.email}
-                </Text>
-              </Stack>
-              <Button
-                size="xs"
-                loading={isLoading}
-                onClick={() => handleAdd(user.userId, userDisplayName(user))}
+          <Stack gap={0}>
+            {candidates.map((user, index) => (
+              <Group
+                key={user.userId}
+                justify="space-between"
+                wrap="nowrap"
+                gap="xl"
+                py="sm"
+                style={{
+                  borderBottom:
+                    index < candidates.length - 1
+                      ? '1px solid var(--mantine-color-default-border)'
+                      : undefined,
+                }}
               >
-                Add
-              </Button>
-            </Group>
-          ))
+                <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+                  <Text size="sm" fw={500} truncate>
+                    {userDisplayName(user)}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {user.username.toLowerCase() === user.email.toLowerCase()
+                      ? user.email
+                      : `${user.username} · ${user.email}`}
+                  </Text>
+                </Stack>
+                <Button
+                  size="xs"
+                  loading={isLoading}
+                  onClick={() => handleAdd(user.userId, userDisplayName(user))}
+                  style={{ flexShrink: 0 }}
+                >
+                  Add
+                </Button>
+              </Group>
+            ))}
+          </Stack>
         )}
       </Stack>
     </Modal>

@@ -51,6 +51,7 @@ import { SortTableHeader } from '../../../../components/SortTableHeader/SortTabl
 import { StatusBadge } from '../../../../components/StatusBadge/StatusBadge'
 import { DataTable } from '../../../../components/DataTable/DataTable'
 import { usePermissions } from '../../../../hooks/usePermissions'
+import { isPlatformAdmin } from '../../../../hooks/useAuth'
 import { useAppSelector } from '../../../../redux/store'
 
 const PAGE_SIZE = 20
@@ -77,7 +78,7 @@ const STATUSES: { value: BranchStatus | ''; label: string }[] = [
 export function BranchListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const role = useAppSelector((state) => state.auth.role)
-  const isSuperAdmin = role === 'ADMIN'
+  const isSuperAdmin = isPlatformAdmin(role)
   const canRead = usePermissions('BRANCH:READ')
   const canCreate = usePermissions('BRANCH:CREATE')
   const canUpdate = usePermissions('BRANCH:UPDATE')

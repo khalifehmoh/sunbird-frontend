@@ -1,6 +1,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { coreBaseQuery } from '../../baseQuery'
 import type { PagedResponse } from '../../../lib/paging'
+import { groupsApi } from '../groups/groupsApi'
+import { usersApi } from '../users/usersApi'
 export type {
   RoleStatus,
   RoleListItem,
@@ -62,6 +64,25 @@ export const rolesApi = createApi({
                 ? [{ type: 'Role' as const, id: role.roleId }]
                 : []),
             ],
+      async onQueryStarted(_role, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+          dispatch(
+            groupsApi.util.invalidateTags([
+              { type: 'RoleList', id: 'LIST' },
+              { type: 'GroupRoles' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     deleteRole: builder.mutation<void, string>({
       query: (roleId) => ({
@@ -74,7 +95,28 @@ export const rolesApi = createApi({
           : [
               { type: 'RoleList', id: 'LIST' },
               { type: 'Role', id: roleId },
+              { type: 'RolePermissions', id: roleId },
             ],
+      async onQueryStarted(_roleId, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+          dispatch(
+            groupsApi.util.invalidateTags([
+              { type: 'RoleList', id: 'LIST' },
+              { type: 'GroupList', id: 'LIST' },
+              { type: 'GroupRoles' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     getRolePermissions: builder.query<RolePermissionItem[], string>({
       query: (roleId) => `/roles/${roleId}/permissions`,
@@ -98,6 +140,19 @@ export const rolesApi = createApi({
               { type: 'Role', id: roleId },
               { type: 'RolePermissions', id: roleId },
             ],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     revokeRolePermission: builder.mutation<
       void,
@@ -115,6 +170,19 @@ export const rolesApi = createApi({
               { type: 'Role', id: roleId },
               { type: 'RolePermissions', id: roleId },
             ],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     batchRolePermissions: builder.mutation<
       RolePermissionItem[],
@@ -133,6 +201,19 @@ export const rolesApi = createApi({
               { type: 'Role', id: roleId },
               { type: 'RolePermissions', id: roleId },
             ],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
   }),
 })

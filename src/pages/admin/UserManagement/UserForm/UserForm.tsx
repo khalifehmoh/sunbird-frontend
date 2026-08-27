@@ -24,6 +24,7 @@ import type {
 } from '../../../../redux/features/users/usersTypes'
 import { useGetTenantsQuery } from '../../../../redux/features/tenants/tenantsApi'
 import { useFormMutation } from '../../../../hooks/useFormMutation'
+import { isPlatformAdmin } from '../../../../hooks/useAuth'
 import { useAppSelector } from '../../../../redux/store'
 import { USER_ROLE_OPTIONS, USER_STATUS_OPTIONS } from '../userConstants'
 
@@ -70,7 +71,7 @@ export function UserForm({
   const { role, tenantId: currentTenantId } = useAppSelector(
     (state) => state.auth,
   )
-  const isSuperAdmin = role === 'ADMIN'
+  const isSuperAdmin = isPlatformAdmin(role)
   const contextualTenantId = defaultTenantId ?? currentTenantId ?? ''
 
   const { data: existing, isFetching } = useGetUserQuery(userId ?? '', {

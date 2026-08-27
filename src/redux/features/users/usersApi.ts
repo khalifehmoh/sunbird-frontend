@@ -10,6 +10,9 @@ export type {
   UserSessionItem,
   ActiveSessionItem,
   GetActiveSessionsArgs,
+  UserRoleItem,
+  UserGroupItem,
+  EffectivePermissionItem,
 } from './usersTypes'
 
 import type {
@@ -20,12 +23,23 @@ import type {
   ActiveSessionItem,
   GetActiveSessionsArgs,
   UserStatus,
+  UserRoleItem,
+  UserGroupItem,
+  EffectivePermissionItem,
 } from './usersTypes'
 
 export const usersApi = createApi({
   reducerPath: 'usersApi',
   baseQuery: coreBaseQuery,
-  tagTypes: ['UserList', 'User', 'UserSessions', 'ActiveSessions'],
+  tagTypes: [
+    'UserList',
+    'User',
+    'UserSessions',
+    'ActiveSessions',
+    'UserRoles',
+    'UserGroups',
+    'UserEffectivePermissions',
+  ],
   endpoints: (builder) => ({
     getUsers: builder.query<PagedResponse<UserListItem>, GetUsersArgs>({
       query: ({ page, size, search, status, tenantId, sort }) => {
@@ -170,6 +184,61 @@ export const usersApi = createApi({
               { type: 'ActiveSessions', id: 'LIST' },
             ],
     }),
+    getUserRoles: builder.query<UserRoleItem[], string>({
+      query: (userId) => `/users/${userId}/roles`,
+      providesTags: (_result, _error, userId) => [
+        { type: 'UserRoles', id: userId },
+      ],
+    }),
+    assignUserRole: builder.mutation<
+      UserRoleItem,
+      { userId: string; roleId: string }
+    >({
+      query: ({ userId, roleId }) => ({
+        url: `/users/${userId}/roles/${roleId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, error, { userId }) =>
+        error
+          ? []
+          : [
+              { type: 'User', id: userId },
+              { type: 'UserRoles', id: userId },
+              { type: 'UserEffectivePermissions', id: userId },
+            ],
+    }),
+    revokeUserRole: builder.mutation<
+      void,
+      { userId: string; roleId: string }
+    >({
+      query: ({ userId, roleId }) => ({
+        url: `/users/${userId}/roles/${roleId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, error, { userId }) =>
+        error
+          ? []
+          : [
+              { type: 'User', id: userId },
+              { type: 'UserRoles', id: userId },
+              { type: 'UserEffectivePermissions', id: userId },
+            ],
+    }),
+    getUserGroups: builder.query<UserGroupItem[], string>({
+      query: (userId) => `/users/${userId}/groups`,
+      providesTags: (_result, _error, userId) => [
+        { type: 'UserGroups', id: userId },
+      ],
+    }),
+    getUserEffectivePermissions: builder.query<
+      EffectivePermissionItem[],
+      string
+    >({
+      query: (userId) => `/users/${userId}/effective-permissions`,
+      providesTags: (_result, _error, userId) => [
+        { type: 'UserEffectivePermissions', id: userId },
+      ],
+    }),
   }),
 })
 
@@ -186,4 +255,9 @@ export const {
   useGetActiveSessionsQuery,
   useTerminateSessionMutation,
   useTerminateAllSessionsMutation,
+  useGetUserRolesQuery,
+  useAssignUserRoleMutation,
+  useRevokeUserRoleMutation,
+  useGetUserGroupsQuery,
+  useGetUserEffectivePermissionsQuery,
 } = usersApi

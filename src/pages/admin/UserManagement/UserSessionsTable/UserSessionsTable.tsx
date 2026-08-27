@@ -23,6 +23,7 @@ import {
 import type { UserSessionItem } from '../../../../redux/features/users/usersTypes'
 import { parseUserAgent, parseOs } from '../../../../utils/userAgent'
 import { usePermissions } from '../../../../hooks/usePermissions'
+import { Permission } from '../../../../constants/permissions'
 
 dayjs.extend(relativeTime)
 
@@ -35,7 +36,7 @@ export function UserSessionsTable({
   userId,
   showHeaderActions = true,
 }: UserSessionsTableProps) {
-  const canUpdate = usePermissions('USER:UPDATE')
+  const canUpdate = usePermissions(Permission.USER_UPDATE)
   const { data, isLoading, isError } = useGetUserSessionsQuery(userId, {
     skip: !userId,
   })

@@ -18,7 +18,7 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { AdminDashboardLink } from '../../components/AdminDashboardLink/AdminDashboardLink'
 import { NavbarLinksGroup } from '../../components/NavbarLinksGroup/NavbarLinksGroup'
 import { NavbarUserFooter } from '../../components/NavbarUserFooter/NavbarUserFooter'
-import { useIsPlatformAdmin } from '../../hooks/useAuth'
+import { useCanAccessAdmin } from '../../hooks/useAuth'
 import classes from './RootLayout.module.css'
 
 const navData = [
@@ -58,7 +58,7 @@ const navData = [
 ]
 
 export function RootLayout() {
-  const isAdmin = useIsPlatformAdmin()
+  const canAccessAdmin = useCanAccessAdmin()
   const links = navData.map((item) => (
     <NavbarLinksGroup
       key={item.label}
@@ -78,19 +78,16 @@ export function RootLayout() {
       <AppShell.Header>
         <Group h="100%" justify="space-between" px="md">
           <BrandLogo to="/" size="md" />
-          <Group gap="sm">
-            <AdminDashboardLink variant="header" />
-            <ThemeToggle />
-          </Group>
+          <ThemeToggle />
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
         <AppShell.Section className={classes.links} component={ScrollArea} grow scrollbars="y">
           <div className={classes.linksInner}>{links}</div>
         </AppShell.Section>
-        {isAdmin && (
+        {canAccessAdmin && (
           <AppShell.Section className={classes.adminNav}>
-            <AdminDashboardLink variant="nav" />
+            <AdminDashboardLink />
           </AppShell.Section>
         )}
         <NavbarUserFooter />

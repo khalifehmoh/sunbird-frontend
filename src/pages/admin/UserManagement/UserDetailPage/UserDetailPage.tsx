@@ -37,12 +37,15 @@ import {
 import type { UserStatus } from '../../../../redux/features/users/usersTypes'
 import { StatusBadge } from '../../../../components/StatusBadge/StatusBadge'
 import { usePermissions } from '../../../../hooks/usePermissions'
+import { Permission } from '../../../../constants/permissions'
 import {
   USER_STATUS_COLORS,
   userDisplayName,
   userInitials,
 } from '../userConstants'
 import { UserForm } from '../UserForm/UserForm'
+import { UserGroupsTab } from '../UserGroupsTab/UserGroupsTab'
+import { UserRolesTab } from '../UserRolesTab/UserRolesTab'
 import { UserSessionsTable } from '../UserSessionsTable/UserSessionsTable'
 
 type DetailTab =
@@ -51,6 +54,18 @@ type DetailTab =
   | 'groups'
   | 'access'
   | 'sessions'
+
+const DETAIL_TABS: DetailTab[] = [
+  'profile',
+  'roles',
+  'groups',
+  'access',
+  'sessions',
+]
+
+function parseDetailTab(value: string | null): DetailTab | null {
+  return DETAIL_TABS.includes(value as DetailTab) ? (value as DetailTab) : null
+}
 
 function DetailField({
   label,
@@ -81,13 +96,15 @@ export function UserDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [activeTab, setActiveTab] = useState<DetailTab>('profile')
+  const [activeTab, setActiveTab] = useState<DetailTab>(
+    parseDetailTab(searchParams.get('tab')) ?? 'profile',
+  )
   const [formOpened, setFormOpened] = useState(
     searchParams.get('edit') === 'true',
   )
 
-  const canRead = usePermissions('USER:READ')
-  const canUpdate = usePermissions('USER:UPDATE')
+  const canRead = usePermissions(Permission.USER_READ)
+  const canUpdate = usePermissions(Permission.USER_UPDATE)
 
   const {
     data: user,
@@ -101,10 +118,26 @@ export function UserDetailPage() {
     useResetUserPasswordMutation()
 
   useEffect(() => {
+    const tab = parseDetailTab(searchParams.get('tab'))
+    if (tab) {
+      setActiveTab(tab)
+    }
     if (searchParams.get('edit') === 'true') {
       setFormOpened(true)
     }
   }, [searchParams])
+
+  function changeTab(value: string | null) {
+    const next = parseDetailTab(value) ?? 'profile'
+    setActiveTab(next)
+    const params = new URLSearchParams(searchParams)
+    if (next === 'profile') {
+      params.delete('tab')
+    } else {
+      params.set('tab', next)
+    }
+    setSearchParams(params, { replace: true })
+  }
 
   function closeForm() {
     setFormOpened(false)
@@ -311,10 +344,7 @@ export function UserDetailPage() {
         </Paper>
 
         <Paper withBorder radius="md" p="md">
-          <Tabs
-            value={activeTab}
-            onChange={(value) => setActiveTab((value as DetailTab) ?? 'profile')}
-          >
+          <Tabs value={activeTab} onChange={changeTab}>
             <Tabs.List>
               <Tabs.Tab value="profile">Profile</Tabs.Tab>
               <Tabs.Tab value="roles">Roles</Tabs.Tab>
@@ -382,25 +412,19 @@ export function UserDetailPage() {
             </Tabs.Panel>
 
             <Tabs.Panel value="roles" pt="md">
-              <StubTab
-                title="Roles coming soon"
-                description="Direct role assignment will be available once the roles module is implemented."
+              <UserRolesTab
+                userId={id}
+                tenantId={user.tenantId}
+                enabled={activeTab === 'roles'}
               />
             </Tabs.Panel>
 
             <Tabs.Panel value="groups" pt="md">
-              <StubTab
-                title="Groups"
-                description="Assign this user to groups from the Groups module. Membership on this profile will be added later."
+              <UserGroupsTab
+                userId={id}
+                tenantId={user.tenantId}
+                enabled={activeTab === 'groups'}
               />
-              <Button
-                mt="sm"
-                variant="light"
-                component={Link}
-                to="/admin/groups"
-              >
-                Open groups
-              </Button>
             </Tabs.Panel>
 
             <Tabs.Panel value="access" pt="md">

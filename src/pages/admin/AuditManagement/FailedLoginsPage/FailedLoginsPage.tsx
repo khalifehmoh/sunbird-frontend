@@ -20,6 +20,7 @@ import dayjs from 'dayjs'
 import { StatCard } from '../../../../components/StatCard/StatCard'
 import { DataTable } from '../../../../components/DataTable/DataTable'
 import { usePermissions } from '../../../../hooks/usePermissions'
+import { Permission } from '../../../../constants/permissions'
 import { notify } from '../../../../lib/notify'
 import {
   useExportAuditLogsMutation,
@@ -48,8 +49,8 @@ function isLocked(until: string | null, status: string | null): boolean {
 export function FailedLoginsPage() {
   const canRead = usePermissions('AUDIT:READ')
   const canExport = usePermissions('AUDIT:EXPORT')
-  const canUpdateUser = usePermissions('USER:UPDATE')
-  const canReadUser = usePermissions('USER:READ')
+  const canUpdateUser = usePermissions(Permission.USER_UPDATE)
+  const canReadUser = usePermissions(Permission.USER_READ)
 
   const [page, setPage] = useState(1)
   const [dateRange, setDateRange] = useState<DateRangeValue>(defaultRange)

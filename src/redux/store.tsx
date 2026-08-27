@@ -16,7 +16,7 @@ import { modulesApi } from './features/modules/modulesApi';
 const authPersistConfig = {
   key: 'auth',
   storage,
-  whitelist: ['username', 'email', 'role', 'tenantId', 'requirePasswordChange', 'mfaEnabled'],
+  whitelist: ['username', 'email', 'role', 'tenantId', 'requirePasswordChange', 'mfaEnabled', 'permissions'],
 };
 
 const rootReducer = combineReducers({

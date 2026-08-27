@@ -13,13 +13,14 @@ import {
 import { ArrowLeft } from 'lucide-react'
 import { useGetUserQuery } from '../../../../redux/features/users/usersApi'
 import { usePermissions } from '../../../../hooks/usePermissions'
+import { Permission } from '../../../../constants/permissions'
 import { userDisplayName } from '../userConstants'
 import { UserSessionsTable } from '../UserSessionsTable/UserSessionsTable'
 
 export function UserSessionsPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const canRead = usePermissions('USER:READ')
+  const canRead = usePermissions(Permission.USER_READ)
 
   const {
     data: user,

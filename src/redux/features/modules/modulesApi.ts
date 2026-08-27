@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { coreBaseQuery } from '../../baseQuery'
 import type { PagedResponse } from '../../../lib/paging'
+import { usersApi } from '../users/usersApi'
 import type {
   CreateModuleRequest,
   CreatePermissionRequest,
@@ -149,6 +150,19 @@ export const modulesApi = createApi({
                 ? [{ type: 'Permission' as const, id: permission.permissionId }]
                 : []),
             ],
+      async onQueryStarted(_permission, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
     deletePermission: builder.mutation<void, string>({
       query: (permissionId) => ({
@@ -164,6 +178,19 @@ export const modulesApi = createApi({
               { type: 'ModuleList', id: 'LIST' },
               { type: 'ModuleCatalog', id: 'LIST' },
             ],
+      async onQueryStarted(_permissionId, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(
+            usersApi.util.invalidateTags([
+              { type: 'UserRoles' },
+              { type: 'UserEffectivePermissions' },
+            ]),
+          )
+        } catch {
+          // Shared base query shows API errors.
+        }
+      },
     }),
   }),
 })

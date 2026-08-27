@@ -69,3 +69,36 @@ export interface GetActiveSessionsArgs {
   size: number
   search: string
 }
+
+export interface UserRoleItem {
+  userRoleId: string | null
+  roleId: string
+  roleCode: string
+  roleName: string
+  roleNameAr: string | null
+  isSystemRole: boolean
+  assignedAt: string | null
+  source: 'DIRECT' | 'GROUP'
+  groupId: string | null
+  groupName: string | null
+}
+
+export interface UserGroupItem {
+  memberId: string
+  groupId: string
+  groupCode: string
+  groupName: string
+  groupNameAr: string | null
+  status: string
+  joinedAt: string | null
+}
+
+export interface EffectivePermissionItem {
+  permissionId: string
+  permissionCode: string
+  permissionName: string
+  moduleId: string
+  moduleCode: string
+  operation: string
+  sources: Array<'DIRECT' | 'GROUP'>
+}
