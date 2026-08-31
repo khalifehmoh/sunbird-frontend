@@ -23,6 +23,7 @@ Older filename `admin_blueprint_v3.md` is superseded — do not point Cursor rul
 | Module | Markdown | Notes |
 |--------|----------|--------|
 | Admin | [`admin.md`](./admin.md) | Product/API/UI scope for the admin module |
+| Permissions (backend 403) | [`../../sunbird-core-backend-nestjs/docs/permissions-followup.md`](../../sunbird-core-backend-nestjs/docs/permissions-followup.md) | Frontend session/nav gating is done. Resume API guards from that note — DB `permission_code` is source of truth (`USER_MGMT_READ`, not blueprint `USER:READ`). |
 
 ## Day-to-day (Cursor)
 
