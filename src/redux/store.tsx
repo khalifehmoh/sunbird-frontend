@@ -12,6 +12,8 @@ import { usersApi } from './features/users/usersApi';
 import { groupsApi } from './features/groups/groupsApi';
 import { rolesApi } from './features/roles/rolesApi';
 import { modulesApi } from './features/modules/modulesApi';
+import { adtApi } from './features/adt/adtApi';
+import { eventsApi } from './features/events/eventsApi';
 
 const authPersistConfig = {
   key: 'auth',
@@ -30,6 +32,8 @@ const rootReducer = combineReducers({
   [groupsApi.reducerPath]: groupsApi.reducer,
   [rolesApi.reducerPath]: rolesApi.reducer,
   [modulesApi.reducerPath]: modulesApi.reducer,
+  [adtApi.reducerPath]: adtApi.reducer,
+  [eventsApi.reducerPath]: eventsApi.reducer,
 });
 
 export const store = configureStore({
@@ -49,6 +53,8 @@ export const store = configureStore({
       groupsApi.middleware,
       rolesApi.middleware,
       modulesApi.middleware,
+      adtApi.middleware,
+      eventsApi.middleware,
     ),
 })
 

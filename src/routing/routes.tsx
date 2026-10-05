@@ -20,6 +20,17 @@ import { RoleListPage } from '../pages/admin/RoleManagement/RoleListPage/RoleLis
 import { RolePermissionsMatrixPage } from '../pages/admin/RoleManagement/RolePermissionsMatrixPage/RolePermissionsMatrixPage'
 import { ModuleListPage } from '../pages/admin/ModuleManagement/ModuleListPage/ModuleListPage'
 import { PermissionListPage } from '../pages/admin/PermissionManagement/PermissionListPage/PermissionListPage'
+import { MedplumRoot } from '../medplum/MedplumRoot'
+import { PatientListPage } from '../pages/clinical/PatientListPage/PatientListPage'
+import { PatientDetailPage } from '../pages/clinical/PatientDetailPage/PatientDetailPage'
+import { EncounterListPage } from '../pages/clinical/EncounterListPage/EncounterListPage'
+import { EncounterDetailPage } from '../pages/clinical/EncounterDetailPage/EncounterDetailPage'
+import { AdmitPage } from '../pages/clinical/adt/AdmitPage'
+import { RegisterVisitPage } from '../pages/clinical/adt/RegisterPage'
+import { TransferPage } from '../pages/clinical/adt/TransferPage'
+import { DischargePage } from '../pages/clinical/adt/DischargePage'
+import { PreadmitPage } from '../pages/clinical/adt/PreadmitPage'
+import { BedBoardPage } from '../pages/clinical/adt/BedBoardPage'
 import { LoginPage } from '../pages/LoginPage/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage/RegisterPage'
 import { ChangePasswordPage } from '../pages/ChangePasswordPage/ChangePasswordPage'
@@ -76,6 +87,24 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <HomePage /> },
           { path: 'security/password', element: <ChangePasswordPage /> },
+          {
+            // Clinical screens share one MedplumProvider.
+            path: 'clinical',
+            element: <MedplumRoot />,
+            children: [
+              { index: true, element: <Navigate to="/clinical/patients" replace /> },
+              { path: 'patients', element: <PatientListPage /> },
+              { path: 'patients/:id', element: <PatientDetailPage /> },
+              { path: 'encounters', element: <EncounterListPage /> },
+              { path: 'encounters/:id', element: <EncounterDetailPage /> },
+              { path: 'adt/admit', element: <AdmitPage /> },
+              { path: 'adt/register', element: <RegisterVisitPage /> },
+              { path: 'adt/transfer', element: <TransferPage /> },
+              { path: 'adt/discharge', element: <DischargePage /> },
+              { path: 'adt/preadmit', element: <PreadmitPage /> },
+              { path: 'adt/beds', element: <BedBoardPage /> },
+            ],
+          },
           { path: '*', element: <Navigate to="/" replace /> }
         ]
       },

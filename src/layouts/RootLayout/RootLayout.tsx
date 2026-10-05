@@ -6,8 +6,11 @@ import {
 } from '@mantine/core'
 import {
   BarChart3,
+  BedDouble,
   CalendarDays,
+  ClipboardList,
   FileSpreadsheet,
+  HeartPulse,
   LayoutDashboard,
   FileText,
   Settings,
@@ -23,10 +26,25 @@ import classes from './RootLayout.module.css'
 
 const navData = [
   { label: 'Dashboard', icon: LayoutDashboard, link: '/' },
+  { label: 'Patients', icon: HeartPulse, link: '/clinical/patients' },
+  { label: 'Encounters', icon: ClipboardList, link: '/clinical/encounters' },
+  {
+    label: 'ADT',
+    icon: BedDouble,
+    initiallyOpened: true,
+    links: [
+      { label: 'Admit (A01)', link: '/clinical/adt/admit' },
+      { label: 'Register (A04)', link: '/clinical/adt/register' },
+      { label: 'Transfer (A02)', link: '/clinical/adt/transfer' },
+      { label: 'Discharge (A03)', link: '/clinical/adt/discharge' },
+      { label: 'Pre-admit (A05)', link: '/clinical/adt/preadmit' },
+      { label: 'Bed board', link: '/clinical/adt/beds' },
+    ],
+  },
   {
     label: 'Market news',
     icon: FileText,
-    initiallyOpened: true,
+    initiallyOpened: false,
     links: [
       { label: 'Overview', link: '/market-news/overview' },
       { label: 'Forecasts', link: '/market-news/forecasts' },
