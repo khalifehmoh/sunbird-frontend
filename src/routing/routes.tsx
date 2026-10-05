@@ -35,8 +35,10 @@ import { LoginPage } from '../pages/LoginPage/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage/RegisterPage'
 import { ChangePasswordPage } from '../pages/ChangePasswordPage/ChangePasswordPage'
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage/ForgotPasswordPage'
+import { ClinicalAccess } from '../constants/permissions'
 import { ProtectedRoutes } from './protectedRoutes'
 import { PublicRoutes } from './publicRoutes'
+import { RequirePermissions } from './RequirePermissions'
 
 function BranchEditRedirect() {
   const { id } = useParams()
@@ -88,21 +90,38 @@ export const router = createBrowserRouter([
           { index: true, element: <HomePage /> },
           { path: 'security/password', element: <ChangePasswordPage /> },
           {
-            // Clinical screens share one MedplumProvider.
+            // Everything clinical reads through the FHIR gateway, so READ gates
+            // the whole tree before the Medplum provider is even mounted.
             path: 'clinical',
-            element: <MedplumRoot />,
+            element: <RequirePermissions codes={ClinicalAccess.view} />,
             children: [
-              { index: true, element: <Navigate to="/clinical/patients" replace /> },
-              { path: 'patients', element: <PatientListPage /> },
-              { path: 'patients/:id', element: <PatientDetailPage /> },
-              { path: 'encounters', element: <EncounterListPage /> },
-              { path: 'encounters/:id', element: <EncounterDetailPage /> },
-              { path: 'adt/admit', element: <AdmitPage /> },
-              { path: 'adt/register', element: <RegisterVisitPage /> },
-              { path: 'adt/transfer', element: <TransferPage /> },
-              { path: 'adt/discharge', element: <DischargePage /> },
-              { path: 'adt/preadmit', element: <PreadmitPage /> },
-              { path: 'adt/beds', element: <BedBoardPage /> },
+              {
+                // Clinical screens share one MedplumProvider.
+                element: <MedplumRoot />,
+                children: [
+                  { index: true, element: <Navigate to="/clinical/patients" replace /> },
+                  { path: 'patients', element: <PatientListPage /> },
+                  { path: 'patients/:id', element: <PatientDetailPage /> },
+                  { path: 'encounters', element: <EncounterListPage /> },
+                  { path: 'encounters/:id', element: <EncounterDetailPage /> },
+                  { path: 'adt/beds', element: <BedBoardPage /> },
+                  {
+                    element: <RequirePermissions codes={ClinicalAccess.create} />,
+                    children: [
+                      { path: 'adt/admit', element: <AdmitPage /> },
+                      { path: 'adt/register', element: <RegisterVisitPage /> },
+                      { path: 'adt/preadmit', element: <PreadmitPage /> },
+                    ],
+                  },
+                  {
+                    element: <RequirePermissions codes={ClinicalAccess.update} />,
+                    children: [
+                      { path: 'adt/transfer', element: <TransferPage /> },
+                      { path: 'adt/discharge', element: <DischargePage /> },
+                    ],
+                  },
+                ],
+              },
             ],
           },
           { path: '*', element: <Navigate to="/" replace /> }

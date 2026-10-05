@@ -15,6 +15,8 @@ import { Info, UserPlus } from 'lucide-react'
 import type { SearchRequest } from '@medplum/core'
 import type { Patient, Resource } from '@medplum/fhirtypes'
 import { ResourceForm, SearchControl, useMedplum } from '@medplum/react'
+import { ClinicalAccess } from '../../../constants/permissions'
+import { useHasPermissions } from '../../../hooks/usePermissions'
 import { notify } from '../../../lib/notify'
 
 /**
@@ -38,6 +40,7 @@ export function PatientListPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState<SearchRequest>(PATIENT_SEARCH)
   const [createOpen, createHandlers] = useDisclosure(false)
+  const canCreate = useHasPermissions(ClinicalAccess.create)
 
   async function handleCreate(resource: Resource) {
     try {
@@ -69,12 +72,14 @@ export function PatientListPage() {
             FHIR R4 patient records, scoped to your organization.
           </Text>
         </div>
-        <Button
-          leftSection={<UserPlus size={16} />}
-          onClick={createHandlers.open}
-        >
-          New patient
-        </Button>
+        {canCreate && (
+          <Button
+            leftSection={<UserPlus size={16} />}
+            onClick={createHandlers.open}
+          >
+            New patient
+          </Button>
+        )}
       </Group>
 
       <Alert
@@ -95,25 +100,27 @@ export function PatientListPage() {
           search={search}
           onChange={(event) => setSearch(event.definition)}
           onClick={(event) => void navigate(`/clinical/patients/${event.resource.id}`)}
-          onNew={createHandlers.open}
+          onNew={canCreate ? createHandlers.open : undefined}
           hideToolbar={false}
           checkboxesEnabled={false}
         />
       </Paper>
 
-      <Modal
-        opened={createOpen}
-        onClose={createHandlers.close}
-        title="New patient"
-        size="xl"
-      >
-        {/* Generated from the Patient StructureDefinition, not hand-written,
-            so it validates against FHIR R4 without a bespoke form. */}
-        <ResourceForm
-          defaultValue={{ resourceType: 'Patient' }}
-          onSubmit={(resource) => void handleCreate(resource)}
-        />
-      </Modal>
+      {canCreate && (
+        <Modal
+          opened={createOpen}
+          onClose={createHandlers.close}
+          title="New patient"
+          size="xl"
+        >
+          {/* Generated from the Patient StructureDefinition, not hand-written,
+              so it validates against FHIR R4 without a bespoke form. */}
+          <ResourceForm
+            defaultValue={{ resourceType: 'Patient' }}
+            onSubmit={(resource) => void handleCreate(resource)}
+          />
+        </Modal>
+      )}
     </Box>
   )
 }

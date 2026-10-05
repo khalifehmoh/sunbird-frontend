@@ -16,6 +16,33 @@ export const Permission = {
 } as const
 
 /**
+ * Live DB `permission_code` values guarding the clinical surface (FHIR gateway
+ * and ADT). Mirrors `PATIENT_MGMT_PERMISSIONS` in the NestJS API, which is what
+ * actually enforces them; the checks in the UI only decide what to show.
+ */
+export const ClinicalPermission = {
+  READ: 'PATIENT_MGMT_READ',
+  CREATE: 'PATIENT_MGMT_CREATE',
+  UPDATE: 'PATIENT_MGMT_UPDATE',
+  DELETE: 'PATIENT_MGMT_DELETE',
+} as const
+
+/**
+ * What a clinical screen or action needs, ANDed (the API's
+ * `@RequirePermissions` has the same semantics). Every clinical screen reads
+ * through the FHIR gateway, so every set includes READ: a user holding only
+ * CREATE could submit an admission but not load the patient to admit.
+ */
+export const ClinicalAccess = {
+  /** Patient and encounter lists/details, bed board. */
+  view: [ClinicalPermission.READ],
+  /** New patient, A01 admit, A04 register, A05 pre-admit. */
+  create: [ClinicalPermission.READ, ClinicalPermission.CREATE],
+  /** Edit patient, A02 transfer, A03 discharge. */
+  update: [ClinicalPermission.READ, ClinicalPermission.UPDATE],
+} as const satisfies Record<string, readonly string[]>
+
+/**
  * Codes that unlock the `/admin` shell and the dashboard link.
  * Excludes clinical/settings codes such as `SETTINGS_READ`.
  */

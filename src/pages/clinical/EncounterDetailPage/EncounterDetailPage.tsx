@@ -26,6 +26,8 @@ import {
   ResourceTable,
   useResource,
 } from '@medplum/react'
+import { ClinicalAccess } from '../../../constants/permissions'
+import { useHasPermissions } from '../../../hooks/usePermissions'
 import { useGetAdtEncounterQuery } from '../../../redux/features/adt/adtApi'
 import { DischargeNotificationsPanel } from '../adt/DischargeNotificationsPanel'
 
@@ -33,6 +35,7 @@ export function EncounterDetailPage() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const canUpdate = useHasPermissions(ClinicalAccess.update)
   const encounter = useResource<Encounter>({ reference: `Encounter/${id}` })
   const { data: summary } = useGetAdtEncounterQuery(id ?? '', {
     skip: !id,
@@ -80,7 +83,7 @@ export function EncounterDetailPage() {
           </Text>
         </div>
         <Group>
-          {isActiveInpatient && patientId && (
+          {isActiveInpatient && patientId && canUpdate && (
             <>
               <Button
                 variant="light"

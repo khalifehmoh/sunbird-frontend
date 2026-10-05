@@ -20,6 +20,8 @@ import {
   useMedplum,
   useResource,
 } from '@medplum/react'
+import { ClinicalAccess } from '../../../constants/permissions'
+import { useHasPermissions } from '../../../hooks/usePermissions'
 import { notify } from '../../../lib/notify'
 
 /**
@@ -34,6 +36,7 @@ export function PatientDetailPage() {
   const { id } = useParams()
   const medplum = useMedplum()
   const navigate = useNavigate()
+  const canUpdate = useHasPermissions(ClinicalAccess.update)
   const patient = useResource<Patient>({ reference: `Patient/${id}` })
 
   async function handleSave(resource: Resource) {
@@ -108,9 +111,11 @@ export function PatientDetailPage() {
                 >
                   Record
                 </Tabs.Tab>
-                <Tabs.Tab value="edit" leftSection={<Pencil size={14} />}>
-                  Edit
-                </Tabs.Tab>
+                {canUpdate && (
+                  <Tabs.Tab value="edit" leftSection={<Pencil size={14} />}>
+                    Edit
+                  </Tabs.Tab>
+                )}
                 <Tabs.Tab value="json" leftSection={<FileJson size={14} />}>
                   FHIR JSON
                 </Tabs.Tab>
@@ -120,12 +125,14 @@ export function PatientDetailPage() {
                 <ResourceTable value={patient} ignoreMissingValues />
               </Tabs.Panel>
 
-              <Tabs.Panel value="edit">
-                <ResourceForm
-                  defaultValue={patient}
-                  onSubmit={(resource) => void handleSave(resource)}
-                />
-              </Tabs.Panel>
+              {canUpdate && (
+                <Tabs.Panel value="edit">
+                  <ResourceForm
+                    defaultValue={patient}
+                    onSubmit={(resource) => void handleSave(resource)}
+                  />
+                </Tabs.Panel>
+              )}
 
               <Tabs.Panel value="json">
                 <Text

@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { Outlet } from 'react-router-dom'
 import {
   AppShell,
@@ -21,24 +22,42 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { AdminDashboardLink } from '../../components/AdminDashboardLink/AdminDashboardLink'
 import { NavbarLinksGroup } from '../../components/NavbarLinksGroup/NavbarLinksGroup'
 import { NavbarUserFooter } from '../../components/NavbarUserFooter/NavbarUserFooter'
-import { useCanAccessAdmin } from '../../hooks/useAuth'
+import { ClinicalAccess } from '../../constants/permissions'
+import { useAuth, useCanAccessAdmin } from '../../hooks/useAuth'
+import { hasAllPermissions } from '../../hooks/usePermissions'
 import classes from './RootLayout.module.css'
 
-const navData = [
+type NavLinkData = {
+  label: string
+  link: string
+  /** Codes the user must hold (all of them); omitted means always shown. */
+  requires?: readonly string[]
+}
+
+type NavItem = {
+  label: string
+  icon: ComponentType<{ size?: number }>
+  link?: string
+  initiallyOpened?: boolean
+  requires?: readonly string[]
+  links?: NavLinkData[]
+}
+
+const navData: NavItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, link: '/' },
-  { label: 'Patients', icon: HeartPulse, link: '/clinical/patients' },
-  { label: 'Encounters', icon: ClipboardList, link: '/clinical/encounters' },
+  { label: 'Patients', icon: HeartPulse, link: '/clinical/patients', requires: ClinicalAccess.view },
+  { label: 'Encounters', icon: ClipboardList, link: '/clinical/encounters', requires: ClinicalAccess.view },
   {
     label: 'ADT',
     icon: BedDouble,
     initiallyOpened: true,
     links: [
-      { label: 'Admit (A01)', link: '/clinical/adt/admit' },
-      { label: 'Register (A04)', link: '/clinical/adt/register' },
-      { label: 'Transfer (A02)', link: '/clinical/adt/transfer' },
-      { label: 'Discharge (A03)', link: '/clinical/adt/discharge' },
-      { label: 'Pre-admit (A05)', link: '/clinical/adt/preadmit' },
-      { label: 'Bed board', link: '/clinical/adt/beds' },
+      { label: 'Admit (A01)', link: '/clinical/adt/admit', requires: ClinicalAccess.create },
+      { label: 'Register (A04)', link: '/clinical/adt/register', requires: ClinicalAccess.create },
+      { label: 'Transfer (A02)', link: '/clinical/adt/transfer', requires: ClinicalAccess.update },
+      { label: 'Discharge (A03)', link: '/clinical/adt/discharge', requires: ClinicalAccess.update },
+      { label: 'Pre-admit (A05)', link: '/clinical/adt/preadmit', requires: ClinicalAccess.create },
+      { label: 'Bed board', link: '/clinical/adt/beds', requires: ClinicalAccess.view },
     ],
   },
   {
@@ -75,16 +94,31 @@ const navData = [
   },
 ]
 
+function visibleNav(role: string, permissions: string[]): NavItem[] {
+  const allowed = (requires?: readonly string[]) =>
+    !requires || hasAllPermissions(role, permissions, requires)
+
+  return navData.flatMap((item) => {
+    if (item.links) {
+      const links = item.links.filter((child) => allowed(child.requires))
+      if (links.length === 0) return []
+      return [{ ...item, links }]
+    }
+    return allowed(item.requires) ? [item] : []
+  })
+}
+
 export function RootLayout() {
   const canAccessAdmin = useCanAccessAdmin()
-  const links = navData.map((item) => (
+  const { role, permissions } = useAuth()
+  const links = visibleNav(role, permissions).map((item) => (
     <NavbarLinksGroup
       key={item.label}
       icon={item.icon}
       label={item.label}
-      initiallyOpened={'initiallyOpened' in item ? item.initiallyOpened : false}
-      link={'link' in item ? item.link : undefined}
-      links={'links' in item ? item.links : undefined}
+      initiallyOpened={item.initiallyOpened ?? false}
+      link={item.link}
+      links={item.links}
     />
   ))
 
