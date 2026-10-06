@@ -24,7 +24,10 @@ import {
 import { PageHeader } from '../shared/PageHeader'
 import { QueryState } from '../shared/QueryState'
 import { errorMessage } from '../shared/format'
+import { useNewItemAlerts } from '../shared/useNewItemAlerts'
 import { OrdersTable } from '../shared/tables'
+
+const ORDERS_POLL_MS = 15_000
 
 export function OrderListPage() {
   const [params, setParams] = useSearchParams()
@@ -44,8 +47,26 @@ export function OrderListPage() {
     type: type ?? undefined,
     priority: priority ?? undefined,
     limit: 100,
-  })
+  }, { pollingInterval: ORDERS_POLL_MS })
   const rows = data?.items ?? []
+
+  // Orders also arrive from other systems (HL7 ORM), so say so when one lands.
+  useNewItemAlerts(
+    data?.items,
+    `${patientId}|${status}|${type}|${priority}`,
+    (fresh) =>
+      notify({
+        type: 'info',
+        title: fresh.length === 1 ? 'New order' : `${fresh.length} new orders`,
+        message: fresh
+          .slice(0, 3)
+          .map(
+            (order) =>
+              `${order.orderNumber ?? 'Order'} · ${order.display ?? order.code ?? ''} · ${order.patientName ?? 'Unknown patient'}`,
+          )
+          .join('\n'),
+      }),
+  )
 
   function setFilter(key: string, value: string | null) {
     const next = new URLSearchParams(params)

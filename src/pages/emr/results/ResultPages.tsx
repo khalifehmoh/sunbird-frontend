@@ -26,8 +26,11 @@ import {
   formatDateTime,
 } from '../shared/format'
 import { PatientCell, ResultsTable } from '../shared/tables'
+import { useNewItemAlerts } from '../shared/useNewItemAlerts'
+import { notify } from '../../../lib/notify'
 
 const CRITICAL_POLL_MS = 60_000
+const RESULTS_POLL_MS = 15_000
 
 /** Page 13: one report with its observations and flags. */
 export function ResultViewerPage() {
@@ -126,8 +129,25 @@ export function ResultListPage() {
     status: status ?? undefined,
     criticalOnly: criticalOnly || undefined,
     limit: 100,
-  })
+  }, { pollingInterval: RESULTS_POLL_MS })
   const rows = data?.items ?? []
+
+  useNewItemAlerts(
+    data?.items,
+    `${patientId}|${status}|${criticalOnly}`,
+    (fresh) =>
+      notify({
+        type: fresh.some((row) => row.hasCritical) ? 'warning' : 'info',
+        title: fresh.length === 1 ? 'New result' : `${fresh.length} new results`,
+        message: fresh
+          .slice(0, 3)
+          .map(
+            (row) =>
+              `${row.display ?? row.code ?? 'Report'} · ${row.patientName ?? 'Unknown patient'}${row.hasCritical ? ' · CRITICAL' : ''}`,
+          )
+          .join('\n'),
+      }),
+  )
 
   function setFilter(key: string, value: string | null) {
     const next = new URLSearchParams(params)
