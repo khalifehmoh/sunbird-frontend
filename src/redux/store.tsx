@@ -1,4 +1,5 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit'
+import { setupListeners } from '@reduxjs/toolkit/query';
 import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux';
 import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
@@ -60,6 +61,9 @@ export const store = configureStore({
       emrApi.middleware,
     ),
 })
+
+// Enables refetchOnFocus / refetchOnReconnect for queries that opt in.
+setupListeners(store.dispatch);
 
 export const persistor = persistStore(store);
 

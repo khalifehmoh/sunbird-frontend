@@ -51,6 +51,11 @@ export function NotificationLogPage() {
     channel: channel ?? undefined,
     eventCode: eventCode ?? undefined,
     limit: 100,
+  }, {
+    // The log changes whenever the listener sends a message: never serve a cached copy.
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
   })
   const rows = data?.items ?? []
 

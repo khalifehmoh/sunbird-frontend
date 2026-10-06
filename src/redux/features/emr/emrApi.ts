@@ -775,6 +775,7 @@ export const emrApi = createApi({
       NotificationLogParams
     >({
       query: (params) => ({ url: '/emr/notifications', params }),
+      keepUnusedDataFor: 0,
     }),
     getNotificationEvents: builder.query<{ items: NotificationEvent[] }, void>({
       query: () => '/emr/notifications/events',
