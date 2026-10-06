@@ -7,6 +7,13 @@ import {
 } from '@mantine/core'
 import {
   BarChart3,
+  Bell,
+  CalendarCheck,
+  ClipboardCheck,
+  FlaskConical,
+  Network,
+  Stethoscope,
+  Users,
   BedDouble,
   CalendarDays,
   ClipboardList,
@@ -22,7 +29,7 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { AdminDashboardLink } from '../../components/AdminDashboardLink/AdminDashboardLink'
 import { NavbarLinksGroup } from '../../components/NavbarLinksGroup/NavbarLinksGroup'
 import { NavbarUserFooter } from '../../components/NavbarUserFooter/NavbarUserFooter'
-import { ClinicalAccess } from '../../constants/permissions'
+import { ClinicalAccess, EmrAccess } from '../../constants/permissions'
 import { useAuth, useCanAccessAdmin } from '../../hooks/useAuth'
 import { hasAllPermissions } from '../../hooks/usePermissions'
 import classes from './RootLayout.module.css'
@@ -45,7 +52,30 @@ type NavItem = {
 
 const navData: NavItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, link: '/' },
-  { label: 'Patients', icon: HeartPulse, link: '/clinical/patients', requires: ClinicalAccess.view },
+  { label: 'Patients', icon: Users, link: '/emr/patients', requires: ClinicalAccess.view },
+  { label: 'Orders', icon: ClipboardCheck, link: '/emr/orders', requires: ClinicalAccess.view },
+  {
+    label: 'Results',
+    icon: FlaskConical,
+    requires: ClinicalAccess.view,
+    links: [
+      { label: 'All results', link: '/emr/results' },
+      { label: 'Critical results', link: '/emr/results/critical' },
+    ],
+  },
+  { label: 'Appointments', icon: CalendarCheck, link: '/emr/appointments', requires: EmrAccess.appointmentsView },
+  { label: 'Vitals', icon: HeartPulse, link: '/emr/vitals', requires: ClinicalAccess.view },
+  { label: 'Diagnoses', icon: Stethoscope, link: '/emr/diagnoses', requires: ClinicalAccess.view },
+  { label: 'Integration', icon: Network, link: '/emr/integration', requires: EmrAccess.integrationView },
+  {
+    label: 'Notifications',
+    icon: Bell,
+    requires: ClinicalAccess.view,
+    links: [
+      { label: 'Log', link: '/emr/notifications' },
+      { label: 'Templates', link: '/emr/notifications/templates', requires: EmrAccess.notificationAdmin },
+    ],
+  },
   { label: 'Encounters', icon: ClipboardList, link: '/clinical/encounters', requires: ClinicalAccess.view },
   {
     label: 'ADT',

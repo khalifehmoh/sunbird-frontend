@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, useParams } from 'react-router-dom'
+import { createBrowserRouter, Navigate, useLocation, useParams } from 'react-router-dom'
 import { AdminLayout } from '../layouts/AdminLayout/AdminLayout'
 import { RootLayout } from '../layouts/RootLayout/RootLayout'
 import { HomePage } from '../pages/HomePage/HomePage'
@@ -35,7 +35,28 @@ import { LoginPage } from '../pages/LoginPage/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage/RegisterPage'
 import { ChangePasswordPage } from '../pages/ChangePasswordPage/ChangePasswordPage'
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage/ForgotPasswordPage'
-import { ClinicalAccess } from '../constants/permissions'
+import { EmrDashboardPage } from '../pages/emr/dashboard/EmrDashboardPage'
+import { PatientWorklistPage } from '../pages/emr/patients/PatientWorklistPage'
+import { PatientProfilePage } from '../pages/emr/patients/PatientProfilePage'
+import { PatientRegistrationPage } from '../pages/emr/patients/PatientRegistrationPage'
+import { PatientAuditPage } from '../pages/emr/patients/PatientAuditPage'
+import { OrderListPage } from '../pages/emr/orders/OrderListPage'
+import { OrderNewPage } from '../pages/emr/orders/OrderNewPage'
+import { CriticalResultsPage, ResultListPage, ResultViewerPage } from '../pages/emr/results/ResultPages'
+import { AppointmentCalendarPage } from '../pages/emr/appointments/AppointmentCalendarPage'
+import { AppointmentBookPage } from '../pages/emr/appointments/AppointmentBookPage'
+import { AppointmentCancelPage } from '../pages/emr/appointments/AppointmentCancelPage'
+import { VitalsDisplayPage, VitalsEntryPage } from '../pages/emr/vitals/VitalsPages'
+import { DiagnosesPage } from '../pages/emr/diagnoses/DiagnosesPage'
+import {
+  IntegrationMonitorPage,
+  IntegrationRetryPage,
+  IntegrationTransactionPage,
+} from '../pages/emr/integration/IntegrationPages'
+import { NotificationLogPage, NotificationTemplatesPage } from '../pages/emr/notifications/NotificationPages'
+import { FhirMetadataPage } from '../pages/emr/fhir/FhirMetadataPage'
+import { ClinicalAccess, EmrAccess } from '../constants/permissions'
+import { useHasPermissions } from '../hooks/usePermissions'
 import { ProtectedRoutes } from './protectedRoutes'
 import { PublicRoutes } from './publicRoutes'
 import { RequirePermissions } from './RequirePermissions'
@@ -75,7 +96,23 @@ function PermissionEditRedirect() {
   return <Navigate to={`/admin/permissions?edit=${id ?? ''}`} replace />
 }
 
+/** Sends clinical users to the EMR dashboard; everyone else keeps the plain home page. */
+function HomeRoute() {
+  const clinical = useHasPermissions(EmrAccess.view)
+  return clinical ? <Navigate to="/emr/dashboard" replace /> : <HomePage />
+}
+
+/** Old /emr/adt/* and /emr/encounters/* links land on the clinical screens. */
+function SplatRedirect({ base }: { base: string }) {
+  const params = useParams()
+  const location = useLocation()
+  const rest = params['*'] ? `/${params['*']}` : ''
+  return <Navigate to={`${base}${rest}${location.search}`} replace />
+}
+
 export const router = createBrowserRouter([
+  // Public: the FHIR capability statement needs no session.
+  { path: '/fhir/metadata', element: <FhirMetadataPage /> },
   {
     element: <ProtectedRoutes />,
     children: [
@@ -87,7 +124,7 @@ export const router = createBrowserRouter([
         path: '/',
         element: <RootLayout />,
         children: [
-          { index: true, element: <HomePage /> },
+          { index: true, element: <HomeRoute /> },
           { path: 'security/password', element: <ChangePasswordPage /> },
           {
             // Everything clinical reads through the FHIR gateway, so READ gates
@@ -120,6 +157,74 @@ export const router = createBrowserRouter([
                       { path: 'adt/discharge', element: <DischargePage /> },
                     ],
                   },
+                ],
+              },
+            ],
+          },
+          {
+            path: 'emr',
+            children: [
+              { index: true, element: <Navigate to="/emr/dashboard" replace /> },
+              { path: 'adt/*', element: <SplatRedirect base="/clinical/adt" /> },
+              { path: 'encounters/*', element: <SplatRedirect base="/clinical/encounters" /> },
+              { path: 'encounters', element: <Navigate to="/clinical/encounters" replace /> },
+              {
+                element: <RequirePermissions codes={EmrAccess.view} />,
+                children: [
+                  { path: 'dashboard', element: <EmrDashboardPage /> },
+                  { path: 'patients', element: <PatientWorklistPage /> },
+                  { path: 'patients/:id', element: <PatientProfilePage /> },
+                  { path: 'patients/:id/audit', element: <PatientAuditPage /> },
+                  { path: 'orders', element: <OrderListPage /> },
+                  { path: 'results', element: <ResultListPage /> },
+                  { path: 'results/critical', element: <CriticalResultsPage /> },
+                  { path: 'results/:id', element: <ResultViewerPage /> },
+                  { path: 'vitals', element: <VitalsDisplayPage /> },
+                  { path: 'diagnoses', element: <DiagnosesPage /> },
+                  { path: 'notifications', element: <NotificationLogPage /> },
+                  {
+                    element: <RequirePermissions codes={EmrAccess.create} />,
+                    children: [
+                      { path: 'patients/new', element: <PatientRegistrationPage /> },
+                      { path: 'orders/new', element: <OrderNewPage /> },
+                      { path: 'vitals/new', element: <VitalsEntryPage /> },
+                    ],
+                  },
+                ],
+              },
+              {
+                element: <RequirePermissions codes={EmrAccess.appointmentsView} />,
+                children: [
+                  { path: 'appointments', element: <AppointmentCalendarPage /> },
+                  {
+                    element: <RequirePermissions codes={EmrAccess.appointmentsBook} />,
+                    children: [{ path: 'appointments/new', element: <AppointmentBookPage /> }],
+                  },
+                  {
+                    element: <RequirePermissions codes={EmrAccess.appointmentsManage} />,
+                    children: [
+                      { path: 'appointments/:id/cancel', element: <AppointmentCancelPage /> },
+                    ],
+                  },
+                ],
+              },
+              {
+                element: <RequirePermissions codes={EmrAccess.integrationView} />,
+                children: [
+                  { path: 'integration', element: <IntegrationMonitorPage /> },
+                  { path: 'integration/transaction/:id', element: <IntegrationTransactionPage /> },
+                  {
+                    element: <RequirePermissions codes={EmrAccess.integrationManage} />,
+                    children: [
+                      { path: 'integration/retry/:id', element: <IntegrationRetryPage /> },
+                    ],
+                  },
+                ],
+              },
+              {
+                element: <RequirePermissions codes={EmrAccess.notificationAdmin} />,
+                children: [
+                  { path: 'notifications/templates', element: <NotificationTemplatesPage /> },
                 ],
               },
             ],

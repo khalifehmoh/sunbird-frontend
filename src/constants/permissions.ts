@@ -43,6 +43,46 @@ export const ClinicalAccess = {
 } as const satisfies Record<string, readonly string[]>
 
 /**
+ * Live DB `permission_code` values for the EMR modules beyond patient
+ * management. Mirrors `EMR_PERMISSIONS` in the NestJS API.
+ */
+export const EmrPermission = {
+  APPOINTMENT_READ: 'APPOINTMENT_MGMT_READ',
+  APPOINTMENT_CREATE: 'APPOINTMENT_MGMT_CREATE',
+  APPOINTMENT_UPDATE: 'APPOINTMENT_MGMT_UPDATE',
+  INTEGRATION_READ: 'IT:READ',
+  INTEGRATION_UPDATE: 'IT:UPDATE',
+  NOTIFICATION_ADMIN: 'NOTIF:ADMIN',
+} as const
+
+/** What each EMR screen or action needs (ANDed, like the API). */
+export const EmrAccess = {
+  /** Dashboard, worklist, profile, orders, results, vitals, diagnoses, log. */
+  view: [ClinicalPermission.READ],
+  /** Register patient, place order, record vitals/diagnosis. */
+  create: [ClinicalPermission.READ, ClinicalPermission.CREATE],
+  /** Cancel order, transfer, discharge. */
+  update: [ClinicalPermission.READ, ClinicalPermission.UPDATE],
+  appointmentsView: [EmrPermission.APPOINTMENT_READ],
+  appointmentsBook: [
+    ClinicalPermission.READ,
+    EmrPermission.APPOINTMENT_READ,
+    EmrPermission.APPOINTMENT_CREATE,
+  ],
+  appointmentsManage: [
+    ClinicalPermission.READ,
+    EmrPermission.APPOINTMENT_READ,
+    EmrPermission.APPOINTMENT_UPDATE,
+  ],
+  integrationView: [EmrPermission.INTEGRATION_READ],
+  integrationManage: [
+    EmrPermission.INTEGRATION_READ,
+    EmrPermission.INTEGRATION_UPDATE,
+  ],
+  notificationAdmin: [EmrPermission.NOTIFICATION_ADMIN],
+} as const satisfies Record<string, readonly string[]>
+
+/**
  * Codes that unlock the `/admin` shell and the dashboard link.
  * Excludes clinical/settings codes such as `SETTINGS_READ`.
  */

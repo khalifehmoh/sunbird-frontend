@@ -14,6 +14,7 @@ import { rolesApi } from './features/roles/rolesApi';
 import { modulesApi } from './features/modules/modulesApi';
 import { adtApi } from './features/adt/adtApi';
 import { eventsApi } from './features/events/eventsApi';
+import { emrApi } from './features/emr/emrApi';
 
 const authPersistConfig = {
   key: 'auth',
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
   [modulesApi.reducerPath]: modulesApi.reducer,
   [adtApi.reducerPath]: adtApi.reducer,
   [eventsApi.reducerPath]: eventsApi.reducer,
+  [emrApi.reducerPath]: emrApi.reducer,
 });
 
 export const store = configureStore({
@@ -55,6 +57,7 @@ export const store = configureStore({
       modulesApi.middleware,
       adtApi.middleware,
       eventsApi.middleware,
+      emrApi.middleware,
     ),
 })
 
