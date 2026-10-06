@@ -3,6 +3,7 @@ import { Select } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import {
   useGetWorklistQuery,
+  useGetPatientOverviewQuery,
   type WorklistItem,
 } from '../../../redux/features/emr/emrApi'
 
@@ -13,8 +14,10 @@ type PatientPickerProps = {
   required?: boolean
   disabled?: boolean
   error?: string
-  /** Shown when `value` is set but not in the loaded results (deep links). */
-  fallbackLabel?: string
+}
+
+function labelOf(patient: { name: string; mrn: string | null }): string {
+  return `${patient.name}${patient.mrn ? ` · ${patient.mrn}` : ''}`
 }
 
 /** Searches the patient worklist by name, MRN or mobile. */
@@ -25,26 +28,37 @@ export function PatientPicker({
   required,
   disabled,
   error,
-  fallbackLabel,
 }: PatientPickerProps) {
   const [search, setSearch] = useState('')
-  const [debounced] = useDebouncedValue(search.trim(), 300)
+  // The chosen patient is remembered here so its label survives the result
+  // list changing underneath it (Mantine writes the label into the search box).
+  const [chosen, setChosen] = useState<WorklistItem | null>(null)
+  const chosenLabel = chosen && chosen.id === value ? labelOf(chosen) : null
+  const searching = search.trim() !== chosenLabel ? search.trim() : ''
+  const [debounced] = useDebouncedValue(searching, 300)
+
   const { data, isFetching } = useGetWorklistQuery({
     q: debounced || undefined,
     limit: 20,
+  })
+
+  // A deep link (`?patientId=`) has a value but nothing chosen yet.
+  const { data: linked } = useGetPatientOverviewQuery(value ?? '', {
+    skip: !value || chosen?.id === value,
   })
 
   const items = useMemo(() => data?.items ?? [], [data])
   const options = useMemo(() => {
     const list = items.map((patient) => ({
       value: patient.id,
-      label: `${patient.name}${patient.mrn ? ` · ${patient.mrn}` : ''}`,
+      label: labelOf(patient),
     }))
     if (value && !list.some((option) => option.value === value)) {
-      list.unshift({ value, label: fallbackLabel ?? value })
+      const known = chosenLabel ?? (linked ? labelOf(linked.patient) : null)
+      if (known) list.unshift({ value, label: known })
     }
     return list
-  }, [items, value, fallbackLabel])
+  }, [items, value, chosenLabel, linked])
 
   return (
     <Select
@@ -62,9 +76,11 @@ export function PatientPicker({
       // The server already filtered; do not filter the labels a second time.
       filter={({ options: all }) => all}
       nothingFoundMessage={isFetching ? 'Searching…' : 'No patients found'}
-      onChange={(id) =>
-        onChange(id, items.find((patient) => patient.id === id) ?? null)
-      }
+      onChange={(id) => {
+        const patient = items.find((item) => item.id === id) ?? null
+        setChosen(patient)
+        onChange(id, patient)
+      }}
     />
   )
 }
